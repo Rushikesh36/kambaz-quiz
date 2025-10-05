@@ -3,11 +3,11 @@ import { Button } from "react-bootstrap";
 export default function AssignmentEditor() {
     return (
         <div id="wd-assignments-editor" className="p-3" style={{ maxWidth: 760 }}>
-            {/* Assignment Name */}
+
             <label htmlFor="wd-name" className="form-label fw-semibold">Assignment Name</label>
             <input id="wd-name" className="form-control" defaultValue="A1" />
 
-            {/* Description Card */}
+
             <div className="mt-3">
                 <textarea
                     id="wd-description"
@@ -17,7 +17,7 @@ export default function AssignmentEditor() {
                 />
             </div>
 
-            {/* Form Rows (label left, control right) */}
+
             <div className="mt-3">
                 {/* Points */}
                 <div className="row g-2 align-items-center mb-3">
@@ -27,7 +27,7 @@ export default function AssignmentEditor() {
                     </div>
                 </div>
 
-                {/* Assignment Group */}
+
                 <div className="row g-2 align-items-center mb-3">
                     <label htmlFor="wd-group" className="col-sm-3 col-form-label text-end">Assignment Group</label>
                     <div className="col-sm-9">
@@ -40,7 +40,7 @@ export default function AssignmentEditor() {
                     </div>
                 </div>
 
-                {/* Display Grade as */}
+
                 <div className="row g-2 align-items-center mb-3">
                     <label htmlFor="wd-display-grade-as" className="col-sm-3 col-form-label text-end">Display Grade as</label>
                     <div className="col-sm-9">
@@ -52,7 +52,7 @@ export default function AssignmentEditor() {
                     </div>
                 </div>
 
-                {/* Submission Type box */}
+
                 <div className="row g-2 mb-3">
                     <label htmlFor="wd-submission-type" className="col-sm-3 col-form-label text-end">Submission Type</label>
                     <div className="col-sm-9">
@@ -87,7 +87,7 @@ export default function AssignmentEditor() {
                     </div>
                 </div>
 
-                {/* Assign Section */}
+
                 <div className="row g-2 mb-3">
                     <div className="col-sm-3 d-flex align-items-start justify-content-end">
                         <span className="col-form-label">Assign</span>
@@ -117,7 +117,7 @@ export default function AssignmentEditor() {
                 </div>
             </div>
 
-            {/* Footer buttons */}
+
             <div className="d-flex justify-content-end gap-2 mt-3">
                 <Button variant="light" className="border">Cancel</Button>
                 <Button variant="danger">Save</Button>

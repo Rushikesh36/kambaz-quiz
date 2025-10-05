@@ -34,7 +34,7 @@ export default function Assignments() {
                         <div className="d-flex align-items-start">
                             <span className="me-3 text-muted">
                                 <BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success"/>
+                                <RiFileEditLine className="me-2 fs-3 text-success" />
                             </span>
                             <div className="flex-fill">
                                 <div className="fw-semibold mb-1">
@@ -60,7 +60,7 @@ export default function Assignments() {
                         <div className="d-flex align-items-start">
                             <span className="me-3 text-muted">
                                 <BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success"/>
+                                <RiFileEditLine className="me-2 fs-3 text-success" />
                             </span>
                             <div className="flex-fill">
                                 <div className="fw-semibold mb-1">
@@ -85,7 +85,7 @@ export default function Assignments() {
                     <li className="list-group-item py-3" style={{ borderLeft: "3px solid #2e7d32" }}>
                         <div className="d-flex align-items-start">
                             <span className="me-3 text-muted"><BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success"/></span>
+                                <RiFileEditLine className="me-2 fs-3 text-success" /></span>
                             <div className="flex-fill">
                                 <div className="fw-semibold mb-1">
                                     <Link href="/Courses/1234/Assignments/125" className="text-decoration-none text-dark">A3</Link>
