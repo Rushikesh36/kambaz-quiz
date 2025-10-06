@@ -1,8 +1,8 @@
 import { ListGroup, ListGroupItem } from "react-bootstrap";
 import Link from "next/link";
-import { AiOutlineDashboard, AiOutlineQuestionCircle } from "react-icons/ai";
+import { AiOutlineDashboard } from "react-icons/ai";
 import { IoCalendarOutline } from "react-icons/io5";
-import { LiaBookSolid, LiaCogSolid, LiaBullhornSolid } from "react-icons/lia";
+import { LiaBookSolid, LiaCogSolid } from "react-icons/lia";
 import { FaInbox, FaRegCircleUser } from "react-icons/fa6";
 
 export default function KambazNavigation() {
@@ -91,18 +91,6 @@ export default function KambazNavigation() {
                     <LiaCogSolid className="fs-1 text-danger" />
                     <br />
                     Labs
-                </Link>
-            </ListGroupItem>
-
-            <ListGroupItem className="border-0 bg-black text-center">
-                <Link
-                    href="/Help"
-                    id="wd-help-link"
-                    className="text-white text-decoration-none"
-                >
-                    <AiOutlineQuestionCircle className="fs-1 text-danger" />
-                    <br />
-                    Help
                 </Link>
             </ListGroupItem>
         </ListGroup>
