@@ -1,0 +1,52 @@
+{
+    "courses": [
+        {
+            "_id": "1234",
+            "name": "CS1234 React JS",
+            "description": "Full Stack software developer using React and Node.js",
+            "imageCard": "/images/courses/react.jpeg"
+        },
+        {
+            "_id": "5678",
+            "name": "CS5678 Python for Data Science",
+            "description": "Introduction to data analysis and machine learning using Python",
+            "imageCard": "/images/courses/python.jpg"
+        },
+        {
+            "_id": "9012",
+            "name": "UI9012 UX/UI Fundamentals",
+            "description": "User experience design principles and rapid prototyping",
+            "imageCard": "/images/courses/uiux.jpeg"
+        },
+        {
+            "_id": "3456",
+            "name": "WEB3456 Modern Web Development",
+            "description": "Advanced JavaScript and framework integration using React",
+            "imageCard": "/images/courses/webdev.jpeg"
+        },
+        {
+            "_id": "7890",
+            "name": "AI7890 Artificial Intelligence Basics",
+            "description": "Foundations of AI, intelligent agents, and problem solving",
+            "imageCard": "/images/courses/download.jpeg"
+        },
+        {
+            "_id": "1122",
+            "name": "SEC1122 Cybersecurity Essentials",
+            "description": "Introduction to network security, encryption, and ethical hacking",
+            "imageCard": "/images/courses/cybersec.jpg"
+        },
+        {
+            "_id": "3344",
+            "name": "DB3344 Database Management Systems",
+            "description": "SQL and NoSQL database design and administration",
+            "imageCard": "/images/courses/dbms.jpg"
+        },
+        {
+            "_id": "5566",
+            "name": "GAM5566 Game Development with Unity",
+            "description": "Learn C# programming and build 2D/3D games using Unity",
+            "imageCard": "/images/courses/game.jpg"
+        }
+    ]
+}
