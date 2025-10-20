@@ -1,6 +1,5 @@
 import * as db from "../Database";
 import Link from "next/link";
-import Image from "next/image";
 import { Row, Col, Card, CardImg, CardBody, CardTitle, CardText, Button } from "react-bootstrap";
 export default function Dashboard() {
     const courses = db.courses;
@@ -16,7 +15,7 @@ export default function Dashboard() {
                             <Card>
                                 <Link href={`/Courses/${course._id}/Home`}
                                     className="wd-dashboard-course-link text-decoration-none text-dark" >
-                                    <CardImg src={course.imageCard} variant="top" width="100%" height={160} />
+                                    <CardImg src={course.image} variant="top" width="100%" height={160} />
                                     <CardBody className="card-body">
                                         <CardTitle className="wd-dashboard-course-title text-nowrap overflow-hidden">
                                             {course.name} </CardTitle>

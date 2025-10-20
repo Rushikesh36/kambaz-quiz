@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { BsGripVertical } from "react-icons/bs";
 import { CiSearch } from "react-icons/ci";
@@ -5,7 +6,21 @@ import { FaCheckCircle } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { PiDotsThreeVerticalBold } from "react-icons/pi";
 import { RiFileEditLine } from "react-icons/ri";
+import { useParams } from "next/navigation";
+import * as db from "../../../Database";
 export default function Assignments() {
+    const { cid } = useParams();
+    const assignments = db.assignments?.filter((a: any) => String(a.course) === String(cid)) ?? [];
+    const fmtPretty = (iso?: string) => {
+        if (!iso) return "—";
+        const d = new Date(iso);
+        const month = d.toLocaleString(undefined, { month: "long" });
+        const day = d.getDate();
+        const time = d
+            .toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: true })
+            .toLowerCase();
+        return `${month} ${day} at ${time}`;
+    };
     return (
         <div id="wd-assignments" className="p-3">
             <div className="d-flex align-items-center mb-3">
@@ -30,81 +45,32 @@ export default function Assignments() {
                 </div>
 
                 <ul id="wd-assignment-list" className="list-group list-group-flush">
-                    <li className="list-group-item py-3" style={{ borderLeft: "3px solid #2e7d32" }}>
-                        <div className="d-flex align-items-start">
-                            <span className="me-3 text-muted">
-                                <BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success" />
-                            </span>
-                            <div className="flex-fill">
-                                <div className="fw-semibold mb-1">
-                                    <Link href="/Courses/1234/Assignments/123" className="text-decoration-none text-dark">A1</Link>
-                                </div>
-                                <div className="small">
-                                    <Link href="#" className="text-danger text-decoration-none me-2">Multiple Modules</Link>
-                                    <span className="text-muted">| <b>Not available until</b> May 6 at 12:00am |</span>
-                                </div>
-                                <div className="small text-muted">
-                                    <b>Due</b> May 13 at 11:59pm&nbsp; | &nbsp;100 pts
-                                </div>
-                            </div>
-                            <div className="ms-3 d-flex align-items-center gap-3">
-                                <span className="text-success fs-5"><FaCheckCircle style={{ top: "2px" }} className="text-success me-1 fs-5" />
+                    {assignments.map((assn: any) => (
+                        <li key={assn._id} className="list-group-item py-3" style={{ borderLeft: "3px solid #2e7d32" }}>
+                            <div className="d-flex align-items-start">
+                                <span className="me-3 text-muted">
+                                    <BsGripVertical className="me-2 fs-3" />
+                                    <RiFileEditLine className="me-2 fs-3 text-success" />
                                 </span>
-                                <span className="text-muted"><PiDotsThreeVerticalBold /></span>
-                            </div>
-                        </div>
-                    </li>
-
-                    <li className="list-group-item py-3" style={{ borderLeft: "3px solid #2e7d32" }}>
-                        <div className="d-flex align-items-start">
-                            <span className="me-3 text-muted">
-                                <BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success" />
-                            </span>
-                            <div className="flex-fill">
-                                <div className="fw-semibold mb-1">
-                                    <Link href="/Courses/1234/Assignments/124" className="text-decoration-none text-dark">A2</Link>
+                                <div className="flex-fill">
+                                    <div className="fw-semibold mb-1">
+                                        <Link href={`/Courses/${cid}/Assignments/${assn._id}`} className="text-decoration-none text-dark">{assn.title ?? assn._id}</Link>
+                                    </div>
+                                    <div className="small">
+                                        <Link href="#" className="text-danger text-decoration-none me-2">Multiple Modules</Link>
+                                        <span className="text-muted">| <b>Not available until</b> {fmtPretty(assn.availableFrom)} |</span>
+                                    </div>
+                                    <div className="small text-muted">
+                                        <b>Due</b> {fmtPretty(assn.due)} &nbsp; | &nbsp;{assn.points ?? 0} pts
+                                    </div>
                                 </div>
-                                <div className="small">
-                                    <Link href="#" className="text-danger text-decoration-none me-2">Multiple Modules</Link>
-                                    <span className="text-muted">| <b>Not available until</b> May 13 at 12:00am |</span>
-                                </div>
-                                <div className="small text-muted">
-                                    <b>Due</b> May 20 at 11:59pm&nbsp; | &nbsp;100 pts
+                                <div className="ms-3 d-flex align-items-center gap-3">
+                                    <span className="text-success fs-5"><FaCheckCircle style={{ top: "2px" }} className="text-success me-1 fs-5" /></span>
+                                    <span className="text-muted"><PiDotsThreeVerticalBold /></span>
                                 </div>
                             </div>
-                            <div className="ms-3 d-flex align-items-center gap-3">
-                                <span className="text-success fs-5"><FaCheckCircle style={{ top: "2px" }} className="text-success me-1 fs-5" />
-                                </span>
-                                <span className="text-muted"><PiDotsThreeVerticalBold /></span>
-                            </div>
-                        </div>
-                    </li>
-
-                    <li className="list-group-item py-3" style={{ borderLeft: "3px solid #2e7d32" }}>
-                        <div className="d-flex align-items-start">
-                            <span className="me-3 text-muted"><BsGripVertical className="me-2 fs-3" />
-                                <RiFileEditLine className="me-2 fs-3 text-success" /></span>
-                            <div className="flex-fill">
-                                <div className="fw-semibold mb-1">
-                                    <Link href="/Courses/1234/Assignments/125" className="text-decoration-none text-dark">A3</Link>
-                                </div>
-                                <div className="small">
-                                    <Link href="#" className="text-danger text-decoration-none me-2">Multiple Modules</Link>
-                                    <span className="text-muted">| <b>Not available until</b> May 20 at 12:00am |</span>
-                                </div>
-                                <div className="small text-muted">
-                                    <b>Due</b> May 27 at 11:59pm&nbsp; | &nbsp;100 pts
-                                </div>
-                            </div>
-                            <div className="ms-3 d-flex align-items-center gap-3">
-                                <span className="text-success fs-5"><FaCheckCircle style={{ top: "2px" }} className="text-success me-1 fs-5" />
-                                </span>
-                                <span className="text-muted"><PiDotsThreeVerticalBold /></span>
-                            </div>
-                        </div>
-                    </li>
+                        </li>
+                    ))}
                 </ul>
             </div>
         </div>
