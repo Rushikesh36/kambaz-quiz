@@ -7,12 +7,12 @@ export default function Dashboard() {
     return (
         <div id="wd-dashboard">
             <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
-            <h2 id="wd-dashboard-published">Published Courses ({courses.length}))</h2> <hr />
+            <h2 id="wd-dashboard-published">Published Courses ({courses.length})</h2> <hr />
             <div id="wd-dashboard-courses">
                 <Row xs={1} md={5} className="g-4">
                     {courses.map((course) => (
                         // eslint-disable-next-line react/jsx-key
-                        <Col className="wd-dashboard-course" style={{ width: "300px" }}>
+                        <Col key={course._id} className="wd-dashboard-course" style={{ width: "300px" }}>
                             <Card>
                                 <Link href={`/Courses/${course._id}/Home`}
                                     className="wd-dashboard-course-link text-decoration-none text-dark" >
@@ -34,4 +34,3 @@ export default function Dashboard() {
         </div>
     );
 }
-
