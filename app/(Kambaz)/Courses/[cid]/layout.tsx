@@ -1,13 +1,19 @@
+"use client";
 import { ReactNode } from "react";
 import CourseNavigation from "./Navigation";
 import { FaAlignJustify } from "react-icons/fa";
 import Breadcrumb from "./Breadcrumb";
 import * as db from "../../Database";
-export default async function CoursesLayout(
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
+import { useParams } from "next/navigation";
+
+export default function CoursesLayout(
     { children, params }: Readonly<{ children: ReactNode; params: Promise<{ cid: string }> }>) {
-    const { cid } = await params;
-    const courses = db.courses;
-    const course = courses.find((course) => course._id === cid);
+    const { cid } = useParams();
+    const { courses } = useSelector((state: RootState) => state.coursesReducer);
+    const course = courses.find((course: any) => course._id === cid);
+
     return (
         <div id="wd-courses">
             <h2 className="text-danger">
@@ -23,6 +29,6 @@ export default async function CoursesLayout(
                 </div>
             </div>
         </div>
-        );
+    );
 }
 
