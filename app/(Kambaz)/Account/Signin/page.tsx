@@ -1,40 +1,44 @@
+"use client";
 import Link from "next/link";
+import { redirect } from "next/dist/client/components/navigation";
+import { setCurrentUser } from "../reducer";
+import { useDispatch } from "react-redux";
+import { useState } from "react";
+import * as db from "../../Database";
+import { FormControl, Button } from "react-bootstrap";
+
 
 export default function Signin() {
+    const [credentials, setCredentials] = useState<any>({});
+    const dispatch = useDispatch();
+    const signin = () => {
+        const user = db.users.find(
+            (u: any) =>
+                u.username === credentials.username &&
+                u.password === credentials.password
+        );
+        if (!user) return;
+        dispatch(setCurrentUser(user));
+        redirect("/Dashboard");
+    };
+
     return (
         <div id="wd-signin-screen" style={{ maxWidth: 400 }}>
             <h3 className="mb-4">Signin</h3>
-            <form>
-                <div className="form-group mb-3">
-                    <input
-                        type="text"
-                        className="form-control"
-                        id="wd-username"
-                        placeholder="username"
-                        defaultValue="john"
-                    />
-                </div>
-                <div className="form-group mb-3">
-                    <input
-                        type="password"
-                        className="form-control"
-                        id="wd-password"
-                        placeholder="password"
-                        defaultValue="123"
-                    />
-                </div>
-                <div className="form-group mb-3">
-                    <Link href="/Dashboard" id="wd-signin-btn" className="btn btn-primary w-100">
-                        Signin
-                    </Link>
-                </div>
-                <div className="form-group">
-                    <Link href="Signup" id="wd-signup-link" className="text-primary">
-                        Signup
-                    </Link>
-                </div>
-            </form>
-        </div>
+            <FormControl defaultValue={credentials.username}
+                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                className="mb-2" placeholder="username" id="wd-username" />
+            <FormControl defaultValue={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                className="mb-2" placeholder="password" type="password" id="wd-password" />
+            <Button onClick={signin} id="wd-signin-btn" className="w-100" > Sign in </Button>
+
+            <div className="form-group">
+                <Link href="Signup" id="wd-signup-link" className="text-primary">
+                    Signup
+                </Link>
+            </div>
+        </div >
 
     );
 }
