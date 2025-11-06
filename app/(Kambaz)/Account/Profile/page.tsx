@@ -1,40 +1,61 @@
-import Link from "next/link";
-
+"use client";
+import { redirect } from "next/dist/client/components/navigation";
+import { useState, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { setCurrentUser } from "../reducer";
+import { RootState } from "../../store";
+import { Button, FormControl } from "react-bootstrap";
 export default function Profile() {
+    const [profile, setProfile] = useState<any>({});
+    const dispatch = useDispatch();
+    const { currentUser } = useSelector((state: RootState) => state.accountReducer);
+    const fetchProfile = () => {
+        if (!currentUser) return redirect("/Account/Signin");
+        setProfile(currentUser);
+    };
+    const signout = () => {
+        dispatch(setCurrentUser(null));
+        redirect("/Account/Signin");
+    };
+    useEffect(() => {
+        fetchProfile();
+    }, []);
     return (
-        <div id="wd-profile-screen" style={{ maxWidth: 400 }}>
-            <h3 className="mb-4">Profile</h3>
-            <form>
-                <div className="form-group mb-3">
-                    <input defaultValue="john" placeholder="username" id="wd-username" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <input defaultValue="123" placeholder="password" type="password" id="wd-password" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <input defaultValue="John" placeholder="First Name" id="wd-firstname" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <input defaultValue="Doe" placeholder="Last Name" id="wd-lastname" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <input defaultValue="1999-10-19" type="date" id="wd-dob" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <input defaultValue="johndoe@gmail.com" type="email" id="wd-email" className="form-control" />
-                </div>
-                <div className="form-group mb-3">
-                    <select defaultValue="FACULTY" id="wd-role" className="form-control">
+        <div className="wd-profile-screen">
+            <h3>Profile</h3>
+            {profile && (
+                <div>
+                    <FormControl id="wd-username" className="mb-2"
+                        defaultValue={profile.username}
+                        onChange={(e) => setProfile({ ...profile, username: e.target.value })} />
+                    <FormControl id="wd-password" className="mb-2"
+                        defaultValue={profile.password}
+                        onChange={(e) => setProfile({ ...profile, password: e.target.value })} />
+                    <FormControl id="wd-firstname" className="mb-2"
+                        defaultValue={profile.firstName}
+                        onChange={(e) => setProfile({ ...profile, firstName: e.target.value })} />
+                    <FormControl id="wd-lastname" className="mb-2"
+                        defaultValue={profile.lastName}
+                        onChange={(e) => setProfile({ ...profile, lastName: e.target.value })} />
+                    <FormControl id="wd-dob" className="mb-2" type="date"
+                        defaultValue={profile.dob}
+                        onChange={(e) => setProfile({ ...profile, dob: e.target.value })} />
+                    <FormControl id="wd-email" className="mb-2"
+                        defaultValue={profile.email}
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
+                    <select className="form-control mb-2" id="wd-role"
+                        onChange={(e) => setProfile({ ...profile, role: e.target.value })} >
                         <option value="USER">User</option>
                         <option value="ADMIN">Admin</option>
-                        <option value="FACULTY">Faculty</option>
+                        <option value="FACULTY">Faculty</option>{" "}
                         <option value="STUDENT">Student</option>
                     </select>
+                    <Button onClick={signout} className="w-100 mb-2" id="wd-signout-btn">
+                        Sign out
+                    </Button>
                 </div>
-                <div className="form-group mb-2">
-                    <Link href="Signin" id="wd-signout-btn" className="btn btn-danger w-100">Signout</Link>
-                </div>
-            </form>
+            )}
         </div>
     );
 }
+

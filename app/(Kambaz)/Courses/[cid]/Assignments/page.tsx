@@ -6,11 +6,22 @@ import { FaCheckCircle } from "react-icons/fa";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { PiDotsThreeVerticalBold } from "react-icons/pi";
 import { RiFileEditLine } from "react-icons/ri";
-import { useParams } from "next/navigation";
-import * as db from "../../../Database";
+import { FiTrash2 } from "react-icons/fi";
+import { useParams, useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { deleteAssignment } from "./reducer";
 export default function Assignments() {
     const { cid } = useParams();
-    const assignments = db.assignments?.filter((a: any) => String(a.course) === String(cid)) ?? [];
+    const router = useRouter();
+    const dispatch = useDispatch();
+    // Be resilient to different reducer keys (assignments, assignmentsReducer, etc.)
+    const state: any = useSelector((s: any) => s);
+    const listFromStore: any[] = (state.assignments?.assignments
+        ?? state.assignmentsReducer?.assignments
+        ?? state.assignment?.assignments
+        ?? state.assignmentsSlice?.assignments
+        ?? []) as any[];
+    const assignments = listFromStore.filter((a: any) => String(a.course) === String(cid));
     const fmtPretty = (iso?: string) => {
         if (!iso) return "—";
         const d = new Date(iso);
@@ -21,6 +32,11 @@ export default function Assignments() {
             .toLowerCase();
         return `${month} ${day} at ${time}`;
     };
+    const onDelete = (assn: any) => {
+        const ok = typeof window !== "undefined" && window.confirm(`Delete assignment "${assn.title ?? assn._id}"?`);
+        if (!ok) return;
+        dispatch(deleteAssignment(assn._id));
+    };
     return (
         <div id="wd-assignments" className="p-3">
             <div className="d-flex align-items-center mb-3">
@@ -30,7 +46,14 @@ export default function Assignments() {
                 </div>
                 <div className="ms-auto">
                     <button id="wd-add-assignment-group" className="btn btn-light border me-2">+Group</button>
-                    <button id="wd-add-assignment" className="btn btn-danger">+ Assignment</button>
+                    <button
+                        id="wd-add-assignment"
+                        className="btn btn-danger"
+                        type="button"
+                        onClick={() => router.push(`/Courses/${cid}/Assignments/Editor`)}
+                    >
+                        + Assignment
+                    </button>
                 </div>
             </div>
 
@@ -43,6 +66,12 @@ export default function Assignments() {
                     <span className="me-2">+</span>
                     <span className=""><PiDotsThreeVerticalBold /></span>
                 </div>
+
+                {assignments.length === 0 && (
+                    <div className="alert alert-warning m-3" role="alert">
+                        No assignments found in store for this course. Check Provider scope and slice key.
+                    </div>
+                )}
 
                 <ul id="wd-assignment-list" className="list-group list-group-flush">
                     {assignments.map((assn: any) => (
@@ -65,6 +94,15 @@ export default function Assignments() {
                                     </div>
                                 </div>
                                 <div className="ms-3 d-flex align-items-center gap-3">
+                                    <button
+                                        id={`wd-delete-${assn._id}`}
+                                        type="button"
+                                        className="btn btn-link text-danger p-0"
+                                        onClick={() => onDelete(assn)}
+                                        title="Delete assignment"
+                                    >
+                                        <FiTrash2 size={18} />
+                                    </button>
                                     <span className="text-success fs-5"><FaCheckCircle style={{ top: "2px" }} className="text-success me-1 fs-5" /></span>
                                     <span className="text-muted"><PiDotsThreeVerticalBold /></span>
                                 </div>
