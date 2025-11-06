@@ -16,7 +16,7 @@ export default function Dashboard() {
     });
     const [showAllCourses, setShowAllCourses] = useState(false);
     const { courses } = useSelector((state: RootState) => state.coursesReducer);
-    const { currentUser } = useSelector((state: RootState) => state.accountReducer)!;
+    const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser) as any;
     const { enrollments } = useSelector((state: RootState) => state.enrollmentsReducer);
     const dispatch = useDispatch();
     const router = useRouter();
