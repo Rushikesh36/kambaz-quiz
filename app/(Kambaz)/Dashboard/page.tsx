@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Row, Col, Card, CardBody, CardTitle, CardText, Button, FormControl } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
@@ -20,8 +20,12 @@ export default function Dashboard() {
     const { enrollments } = useSelector((state: RootState) => state.enrollmentsReducer);
     const dispatch = useDispatch();
     const router = useRouter();
+    useEffect(() => {
+        if (!currentUser) {
+            router.push("Account/Signin");
+        }
+    }, [currentUser, router]);
     if (!currentUser) {
-        router.push("Account/Signin");
         return null;
     }
 
