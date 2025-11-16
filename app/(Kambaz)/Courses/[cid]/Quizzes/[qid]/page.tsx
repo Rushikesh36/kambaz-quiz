@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button, Card, ProgressBar, Table } from "react-bootstrap";
+import { Button, Card, ProgressBar, Table, Alert } from "react-bootstrap";
 import Link from "next/link";
 
 interface Attempt {
@@ -70,98 +70,104 @@ export default function QuizDetailPage() {
 
   return (
     <div id="wd-quiz-detail" className="p-4">
-      <div className="d-flex justify-content-between align-items-start mb-3">
-        <div>
-          <h3 className="mb-1">{quiz.title}</h3>
-          <div className="text-muted small">{quiz.quizType} • {quiz.points} pts</div>
-        </div>
+      {/* Breadcrumb + Title */}
+      <nav aria-label="breadcrumb" className="mb-3">
+        <ol className="breadcrumb">
+          <li className="breadcrumb-item"><Link href="/">Courses</Link></li>
+          <li className="breadcrumb-item"><Link href={`/Courses/${cid}`}>{cid}</Link></li>
+          <li className="breadcrumb-item active" aria-current="page">{quiz.title}</li>
+        </ol>
+      </nav>
 
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h1 className="mb-0">{quiz.title}</h1>
         <div className="d-flex gap-2">
-          <Button variant="outline-primary">Details</Button>
-          <Button variant="outline-secondary">Quiz Bar</Button>
+          <Button variant="outline-primary" size="sm">Details</Button>
+          <Button variant="outline-secondary" size="sm">Quiz Bar</Button>
+        </div>
+      </div>
+
+      {/* Meta Row */}
+      <div className="mb-4 border-bottom pb-3 d-flex flex-wrap align-items-center gap-3">
+        <div className="me-3"><strong>Due</strong> {quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : '—'}</div>
+        <div className="me-3"><strong>Points</strong> {quiz.points}</div>
+        <div className="me-3"><strong>Questions</strong> {quiz.attemptHistory?.length ? quiz.attemptHistory.length : '—'}</div>
+        <div className="me-3"><strong>Time Limit</strong> {quiz.timeLimit ? `${quiz.timeLimit} Minutes` : 'No limit'}</div>
+        <div className="small text-muted ms-auto">
+          {quiz.availableDate && quiz.availableUntil && (
+            <span>Available {new Date(quiz.availableDate).toLocaleDateString()} - {new Date(quiz.availableUntil).toLocaleDateString()}</span>
+          )}
         </div>
       </div>
 
       <div className="row">
-        <div className="col-md-8">
-          <Card className="mb-3">
-            <Card.Body>
-              <Card.Title>Instructions</Card.Title>
-              <Card.Text>{quiz.description}</Card.Text>
+        <div className="col-xl-8 col-lg-7">
+          <h4 className="mb-3">Instructions</h4>
+          <div className="mb-4">
+            <p className="lead">{quiz.description}</p>
+            <h6>Asynchronous Courses</h6>
+            <ul>
+              <li>Exams will be accessible for a one-week period.</li>
+              <li>Exams must be submitted within one week of their release.</li>
+              <li>Correct answers will be provided one day after the submission deadline.</li>
+              <li>Correct answers will only be available for one week after the deadline.</li>
+            </ul>
 
-              <div className="d-flex align-items-center gap-3">
-                <div>
-                  <strong>Time Limit</strong>
-                  <div className="text-muted">{quiz.timeLimit ? `${quiz.timeLimit} minutes` : 'No limit'}</div>
-                </div>
+            <h6>Half Semester Terms</h6>
+            <p className="text-muted">Given the accelerated pace of half-semester courses strict adherence to the exam schedule is essential. Exams must be submitted by the designated due date; late submissions will not be accepted unless you have a valid reason.</p>
 
-                <div>
-                  <strong>Attempts</strong>
-                  <div className="text-muted">{quiz.maxAttempts ? `${attemptsUsed}/${quiz.maxAttempts}` : attemptsUsed}</div>
-                </div>
-
-                <div>
-                  <strong>Due</strong>
-                  <div className="text-muted">{quiz.dueDate ? new Date(quiz.dueDate).toLocaleString() : '—'}</div>
-                </div>
-              </div>
-            </Card.Body>
-          </Card>
-
-          <Card className="mb-3">
-            <Card.Body>
-              <Card.Title>Attempt History</Card.Title>
-              {quiz.attemptHistory && quiz.attemptHistory.length > 0 ? (
-                <Table striped bordered size="sm">
-                  <thead>
-                    <tr>
-                      <th>Attempt</th>
-                      <th>Score</th>
-                      <th>Submitted</th>
-                      <th>Duration</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {quiz.attemptHistory.map((a) => (
-                      <tr key={a.attemptNumber} className={a === latestAttempt ? 'table-primary' : ''}>
-                        <td>{a.attemptNumber}</td>
-                        <td>{a.score === null ? '—' : `${a.score}/${quiz.points}`}</td>
-                        <td>{a.submitTime ? new Date(a.submitTime).toLocaleString() : 'In progress'}</td>
-                        <td>{a.duration || '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              ) : (
-                <div className="text-muted">You have not attempted this quiz yet.</div>
-              )}
-            </Card.Body>
-          </Card>
-
-          <div className="d-flex gap-2">
-            <Button id="wd-start-quiz-btn" onClick={startQuiz} disabled={!canStart()}>
-              Start Quiz
-            </Button>
-
-            <Link href={`/Courses/${cid}/Quizzes`} className="btn btn-outline-secondary">
-              Back to Quizzes
-            </Link>
+            {quiz.availableUntil && Date.now() > new Date(quiz.availableUntil).getTime() && (
+              <p className="text-muted">This quiz was locked {new Date(quiz.availableUntil).toLocaleString()}.</p>
+            )}
           </div>
+
+          <h5 className="mb-3">Attempt History</h5>
+
+          {quiz.attemptHistory && quiz.attemptHistory.length > 0 ? (
+            <Table hover className="mb-3">
+              <thead>
+                <tr>
+                  <th style={{width:120}}>LATEST</th>
+                  <th>Attempt</th>
+                  <th>Time</th>
+                  <th>Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quiz.attemptHistory.map((a) => (
+                  <tr key={a.attemptNumber} className={a === latestAttempt ? 'table-light' : ''}>
+                    <td className="text-danger fw-bold">{a === latestAttempt ? 'Latest' : ''}</td>
+                    <td><Link href="#" className={a === latestAttempt ? 'text-danger' : ''}>Attempt {a.attemptNumber}</Link></td>
+                    <td>{a.duration || '—'}</td>
+                    <td>{a.score === null ? '—' : `${a.score} out of ${quiz.points}`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          ) : (
+            <div className="text-muted mb-3">You have not attempted this quiz yet.</div>
+          )}
+
+          {quiz.availableUntil && Date.now() > new Date(quiz.availableUntil).getTime() && (
+            <Alert variant="danger">Correct answers are no longer available.</Alert>
+          )}
         </div>
 
-        <div className="col-md-4">
-          <Card>
+        <div className="col-xl-4 col-lg-5">
+          <Card className="mb-3">
             <Card.Body>
-              <Card.Title>Quick Overview</Card.Title>
-              <div className="mb-3">
-                <div className="small text-muted">Progress (latest attempt)</div>
-                <ProgressBar now={latestAttempt && latestAttempt.score ? (latestAttempt.score / quiz.points) * 100 : 0} label={latestAttempt && latestAttempt.score ? `${Math.round(((latestAttempt.score || 0) / quiz.points) * 100)}%` : '0%'} />
+              <Card.Title className="mb-3">Submission Details:</Card.Title>
+              <div className="d-flex justify-content-between mb-2">
+                <div className="text-muted">Time:</div>
+                <div>{latestAttempt?.duration ?? '—'}</div>
               </div>
-
-              <div>
-                <div><strong>Available:</strong></div>
-                <div className="text-muted small">{quiz.availableDate ? new Date(quiz.availableDate).toLocaleString() : '—'}</div>
-                <div className="text-muted small">until {quiz.availableUntil ? new Date(quiz.availableUntil).toLocaleString() : '—'}</div>
+              <div className="d-flex justify-content-between mb-2">
+                <div className="text-muted">Current Score:</div>
+                <div>{latestAttempt?.score != null ? `${latestAttempt?.score} out of ${quiz.points}` : '—'}</div>
+              </div>
+              <div className="d-flex justify-content-between">
+                <div className="text-muted">Kept Score:</div>
+                <div>{latestAttempt?.score != null ? `${latestAttempt?.score} out of ${quiz.points}` : '—'}</div>
               </div>
             </Card.Body>
           </Card>
