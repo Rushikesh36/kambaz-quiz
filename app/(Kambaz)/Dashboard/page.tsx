@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Row, Col, Card, CardBody, CardTitle, CardText, Button, FormControl } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { addNewCourse, deleteCourse, updateCourse } from "../Courses/reducer";
+import { updateCourse, setCourses } from "../Courses/reducer";
+import * as client from "../Courses/client";
 import { RootState } from "../store";
 import { enrollInCourse, unenrollFromCourse } from "../Courses/[cid]/Enrollments/reducer";
 import { useRouter } from "next/navigation";
@@ -14,21 +15,50 @@ export default function Dashboard() {
         startDate: "2023-09-10", endDate: "2023-12-15",
         image: "/images/reactjs.jpg", description: "New Description"
     });
+    const onAddNewCourse = async () => {
+        const newCourse = await client.createCourse(course);
+        dispatch(setCourses([...courses, newCourse]));
+    };
+    const onDeleteCourse = async (courseId: string) => {
+        const status = await client.deleteCourse(courseId);
+        dispatch(setCourses(courses.filter((course) => course._id !== courseId)));
+    };
+    const onUpdateCourse = async () => {
+    await client.updateCourse(course);
+    dispatch(setCourses(courses.map((c) => {
+        if (c._id === course._id) { return course; }
+        else { return c; }
+    })));};
+
+
+
     const [showAllCourses, setShowAllCourses] = useState(false);
     const { courses } = useSelector((state: RootState) => state.coursesReducer);
     const currentUser = useSelector((state: RootState) => state.accountReducer.currentUser) as any;
     const { enrollments } = useSelector((state: RootState) => state.enrollmentsReducer);
     const dispatch = useDispatch();
     const router = useRouter();
+
+    const fetchCourses = async () => {
+        try {
+            const courses = await client.findMyCourses();
+            dispatch(setCourses(courses));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     useEffect(() => {
         if (!currentUser) {
             router.push("Account/Signin");
+            return;
         }
-    }, [currentUser, router]);
+        fetchCourses();
+    }, [currentUser]);
+
     if (!currentUser) {
         return null;
     }
-
     return (
         <div id="wd-dashboard">
             <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
@@ -43,9 +73,9 @@ export default function Dashboard() {
                 </button>
                 <button className="btn btn-primary float-end"
                     id="wd-add-new-course-click"
-                    onClick={() => dispatch(addNewCourse(course))} > Add </button>
+                    onClick={onAddNewCourse} > Add </button>
                 <button className="btn btn-warning float-end me-2"
-                    onClick={() => dispatch(updateCourse(course))} id="wd-update-course-click">
+                    onClick={onUpdateCourse} id="wd-update-course-click">
                     Update
                 </button>
             </h5><hr /><br />
@@ -65,8 +95,7 @@ export default function Dashboard() {
                                 enrollment.course === c._id
                         )
                     ).length)
-                }
-                )
+                })
             </h2>
             <hr />
             <div id="wd-dashboard-courses">
@@ -118,7 +147,7 @@ export default function Dashboard() {
                                                 <button
                                                     onClick={(event) => {
                                                         event.preventDefault();
-                                                        dispatch(deleteCourse(course._id));
+                                                        onDeleteCourse(course._id);
                                                     }}
                                                     className="btn btn-danger float-end"
                                                     id="wd-delete-course-click"
