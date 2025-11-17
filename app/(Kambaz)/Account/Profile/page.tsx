@@ -17,12 +17,10 @@ export default function Profile() {
 
     const loadProfile = async () => {
         try {
-            // Always ask server who is logged in (session)
             const serverUser = await client.profile();
             dispatch(setCurrentUser(serverUser));
             setProfile(serverUser);
         } catch (e) {
-            // Not logged in
             router.push("/Account/Signin");
         }
     };
@@ -48,6 +46,9 @@ export default function Profile() {
             <h3>Profile</h3>
             {profile && profile._id && (
                 <div>
+                    <label htmlFor="wd-username" className="form-label">
+                        Username
+                    </label>
                     <FormControl
                         id="wd-username"
                         className="mb-2"
@@ -56,6 +57,10 @@ export default function Profile() {
                             setProfile({ ...profile, username: e.target.value })
                         }
                     />
+
+                    <label htmlFor="wd-password" className="form-label">
+                        Password
+                    </label>
                     <FormControl
                         id="wd-password"
                         className="mb-2"
@@ -65,6 +70,10 @@ export default function Profile() {
                             setProfile({ ...profile, password: e.target.value })
                         }
                     />
+
+                    <label htmlFor="wd-firstname" className="form-label">
+                        First Name
+                    </label>
                     <FormControl
                         id="wd-firstname"
                         className="mb-2"
@@ -73,6 +82,10 @@ export default function Profile() {
                             setProfile({ ...profile, firstName: e.target.value })
                         }
                     />
+
+                    <label htmlFor="wd-lastname" className="form-label">
+                        Last Name
+                    </label>
                     <FormControl
                         id="wd-lastname"
                         className="mb-2"
@@ -81,28 +94,38 @@ export default function Profile() {
                             setProfile({ ...profile, lastName: e.target.value })
                         }
                     />
+
+                    <label htmlFor="wd-dob" className="form-label">
+                        Date of Birth
+                    </label>
                     <FormControl
                         id="wd-dob"
                         className="mb-2"
                         type="date"
                         value={profile.dob ?? ""}
-                        onChange={(e) =>
-                            setProfile({ ...profile, dob: e.target.value })
-                        }
+                        onChange={(e) => setProfile({ ...profile, dob: e.target.value })}
                     />
+
+                    <label htmlFor="wd-email" className="form-label">
+                        Email
+                    </label>
                     <FormControl
                         id="wd-email"
                         className="mb-2"
                         value={profile.email ?? ""}
-                        onChange={(e) =>
-                            setProfile({ ...profile, email: e.target.value })
-                        }
+                        onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                     />
+
+                    <label htmlFor="wd-role" className="form-label">
+                        Role
+                    </label>
                     <select
                         className="form-control mb-2"
                         id="wd-role"
                         value={profile.role ?? "USER"}
-                        onChange={(e) => setProfile({ ...profile, role: e.target.value })}
+                        onChange={(e) =>
+                            setProfile({ ...profile, role: e.target.value })
+                        }
                     >
                         <option value="USER">User</option>
                         <option value="ADMIN">Admin</option>
