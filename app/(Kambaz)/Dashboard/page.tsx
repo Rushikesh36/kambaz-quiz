@@ -115,8 +115,8 @@ export default function Dashboard() {
         userEnrollments.some((en: any) => en.course === courseId);
 
     const visibleCourses = showAllCourses
-        ? courses.filter((course) => isEnrolledIn(course._id))
-        : courses;
+        ? courses
+        : courses.filter((course) => isEnrolledIn(course._id));
 
     return (
         <div id="wd-dashboard">
@@ -162,8 +162,8 @@ export default function Dashboard() {
             />
 
             <h2 id="wd-dashboard-published">
-                {showAllCourses ? "Enrolled Courses" : "Published Courses"} (
-                {showAllCourses ? visibleCourses.length : courses.length})
+                {showAllCourses ?  "Published Courses" : "Enrolled Courses"} (
+                {showAllCourses ? courses.length : visibleCourses.length})
             </h2>
             <hr />
 
