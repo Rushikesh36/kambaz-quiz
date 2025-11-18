@@ -20,6 +20,7 @@ export default function PathParameters() {
                 href={`${HTTP_SERVER}/lab5/subtract/${a}/${b}`}>
                 Substract {a} - {b}
             </a>
+            
             <a
                 className="btn btn-success me-2"
                 id="wd-path-parameter-multiply"
