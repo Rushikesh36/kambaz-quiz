@@ -78,7 +78,7 @@ export default function Dashboard() {
 
     const fetchCourses = async () => {
         try {
-            const courses = await client.findMyCourses();
+            const courses = await client.fetchAllCourses();
             dispatch(setCourses(courses));
         } catch (error) {
             console.error(error);
@@ -101,7 +101,6 @@ export default function Dashboard() {
         }
         fetchCourses();
         fetchEnrollments(currentUser._id);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser?._id]);
 
     if (!currentUser) {
@@ -116,8 +115,8 @@ export default function Dashboard() {
         userEnrollments.some((en: any) => en.course === courseId);
 
     const visibleCourses = showAllCourses
-        ? courses
-        : courses.filter((course) => isEnrolledIn(course._id));
+        ? courses.filter((course) => isEnrolledIn(course._id))
+        : courses;
 
     return (
         <div id="wd-dashboard">
@@ -163,8 +162,8 @@ export default function Dashboard() {
             />
 
             <h2 id="wd-dashboard-published">
-                {showAllCourses ? "All Courses" : "Published Courses"} (
-                {showAllCourses ? courses.length : visibleCourses.length})
+                {showAllCourses ? "Enrolled Courses" : "Published Courses"} (
+                {showAllCourses ? visibleCourses.length : courses.length})
             </h2>
             <hr />
 
