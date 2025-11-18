@@ -39,7 +39,9 @@ export default function Dashboard() {
     });
 
     const onAddNewCourse = async () => {
-        const newCourse = await client.createCourse(course);
+        const { _id, ...payload } = course;
+        console.log("Payload:", payload);
+        const newCourse = await client.createCourse(payload);
         dispatch(setCourses([...courses, newCourse]));
     };
 

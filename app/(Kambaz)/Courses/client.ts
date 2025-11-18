@@ -15,7 +15,12 @@ export const findMyCourses = async () => {
 };
 
 export const createCourse = async (course: any) => {
-    const { data } = await axiosWithCredentials.post(`${USERS_API}/current/courses`, course);
+    const { _id, ...payload } = course;
+    console.log("Payload in client.ts:", payload,  `${USERS_API}/current/courses`,);
+    const { data } = await axiosWithCredentials.post(
+        `${USERS_API}/current/courses`,
+        payload
+    );
     return data;
 };
 
