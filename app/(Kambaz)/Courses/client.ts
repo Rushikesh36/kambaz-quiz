@@ -16,7 +16,7 @@ export const findMyCourses = async () => {
 
 export const createCourse = async (course: any) => {
     const { _id, ...payload } = course;
-    console.log("Payload in client.ts:", payload,  `${USERS_API}/current/courses`,);
+    console.log("Payload in client.ts:", payload, `${USERS_API}/current/courses`,);
     const { data } = await axiosWithCredentials.post(
         `${USERS_API}/current/courses`,
         payload
@@ -58,10 +58,6 @@ export const updateModule = async (module: any) => {
     const { data } = await axios.put(`${MODULES_API}/${module._id}`, module);
     return data;
 };
-
-
-
-
 
 
 
