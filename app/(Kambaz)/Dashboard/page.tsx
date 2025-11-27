@@ -38,19 +38,35 @@ export default function Dashboard() {
         description: "New Description",
     });
 
+    const { courses } = useSelector((state: RootState) => state.coursesReducer);
+    const currentUser = useSelector(
+        (state: RootState) => state.accountReducer.currentUser
+    ) as any;
+    const { enrollments } = useSelector(
+        (state: RootState) => state.enrollmentsReducer
+    );
+    const dispatch = useDispatch();
+    const router = useRouter();
+
+    const isFaculty =
+        currentUser?.role &&
+        currentUser.role.toString().toLowerCase() === "faculty";
+
     const onAddNewCourse = async () => {
+        if (!isFaculty) return;
         const { _id, ...payload } = course;
-        console.log("Payload:", payload);
         const newCourse = await client.createCourse(payload);
         dispatch(setCourses([...courses, newCourse]));
     };
 
     const onDeleteCourse = async (courseId: string) => {
+        if (!isFaculty) return;
         await client.deleteCourse(courseId);
         dispatch(setCourses(courses.filter((course) => course._id !== courseId)));
     };
 
     const onUpdateCourse = async () => {
+        if (!isFaculty) return;
         await client.updateCourse(course);
         dispatch(
             setCourses(
@@ -66,15 +82,6 @@ export default function Dashboard() {
     };
 
     const [showAllCourses, setShowAllCourses] = useState(false);
-    const { courses } = useSelector((state: RootState) => state.coursesReducer);
-    const currentUser = useSelector(
-        (state: RootState) => state.accountReducer.currentUser
-    ) as any;
-    const { enrollments } = useSelector(
-        (state: RootState) => state.enrollmentsReducer
-    );
-    const dispatch = useDispatch();
-    const router = useRouter();
 
     const fetchCourses = async () => {
         try {
@@ -120,7 +127,8 @@ export default function Dashboard() {
 
     return (
         <div id="wd-dashboard">
-            <h1 id="wd-dashboard-title">Dashboard</h1> <hr />
+            <h1 id="wd-dashboard-title">Dashboard</h1>
+            <hr />
             <h5>
                 New Course
                 <button
@@ -130,39 +138,47 @@ export default function Dashboard() {
                 >
                     Enrollments
                 </button>
-                <button
-                    className="btn btn-primary float-end"
-                    id="wd-add-new-course-click"
-                    onClick={onAddNewCourse}
-                >
-                    Add
-                </button>
-                <button
-                    className="btn btn-warning float-end me-2"
-                    onClick={onUpdateCourse}
-                    id="wd-update-course-click"
-                >
-                    Update
-                </button>
+                {isFaculty && (
+                    <>
+                        <button
+                            className="btn btn-primary float-end"
+                            id="wd-add-new-course-click"
+                            onClick={onAddNewCourse}
+                        >
+                            Add
+                        </button>
+                        <button
+                            className="btn btn-warning float-end me-2"
+                            onClick={onUpdateCourse}
+                            id="wd-update-course-click"
+                        >
+                            Update
+                        </button>
+                    </>
+                )}
             </h5>
             <hr />
             <br />
-            <FormControl
-                value={course.name}
-                className="mb-2"
-                onChange={(e) => setCourse({ ...course, name: e.target.value })}
-            />
-            <FormControl
-                as="textarea"
-                value={course.description}
-                rows={3}
-                onChange={(e) =>
-                    setCourse({ ...course, description: e.target.value })
-                }
-            />
+            {isFaculty && (
+                <>
+                    <FormControl
+                        value={course.name}
+                        className="mb-2"
+                        onChange={(e) => setCourse({ ...course, name: e.target.value })}
+                    />
+                    <FormControl
+                        as="textarea"
+                        value={course.description}
+                        rows={3}
+                        onChange={(e) =>
+                            setCourse({ ...course, description: e.target.value })
+                        }
+                    />
+                </>
+            )}
 
             <h2 id="wd-dashboard-published">
-                {showAllCourses ?  "Published Courses" : "Enrolled Courses"} (
+                {showAllCourses ? "Published Courses" : "Enrolled Courses"} (
                 {showAllCourses ? courses.length : visibleCourses.length})
             </h2>
             <hr />
@@ -202,48 +218,54 @@ export default function Dashboard() {
                                                 </CardText>
 
                                                 <div className="mb-2">
-                                                    <button
-                                                        className="btn btn-danger btn-sm me-2"
-                                                        onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            await unenrollFromCourseApi(
-                                                                currentUser._id,
-                                                                course._id
-                                                            );
-                                                            dispatch(
-                                                                unenrollFromCourse({
-                                                                    user: currentUser._id,
-                                                                    course: course._id,
-                                                                })
-                                                            );
-                                                        }}
-                                                        id={`wd-unenroll-${course._id}`}
-                                                    >
-                                                        Unenroll
-                                                    </button>
+                                                    {!isFaculty && (
+                                                        <button
+                                                            className="btn btn-danger btn-sm me-2"
+                                                            onClick={async (e) => {
+                                                                e.preventDefault();
+                                                                await unenrollFromCourseApi(
+                                                                    currentUser._id,
+                                                                    course._id
+                                                                );
+                                                                dispatch(
+                                                                    unenrollFromCourse({
+                                                                        user: currentUser._id,
+                                                                        course: course._id,
+                                                                    })
+                                                                );
+                                                            }}
+                                                            id={`wd-unenroll-${course._id}`}
+                                                        >
+                                                            Unenroll
+                                                        </button>
+                                                    )}
                                                 </div>
 
                                                 <Button variant="primary">Go</Button>
-                                                <button
-                                                    onClick={(event) => {
-                                                        event.preventDefault();
-                                                        onDeleteCourse(course._id);
-                                                    }}
-                                                    className="btn btn-danger float-end"
-                                                    id="wd-delete-course-click"
-                                                >
-                                                    Delete
-                                                </button>
-                                                <button
-                                                    id="wd-edit-course-click"
-                                                    onClick={(event) => {
-                                                        event.preventDefault();
-                                                        setCourse(course);
-                                                    }}
-                                                    className="btn btn-warning me-2 float-end"
-                                                >
-                                                    Edit
-                                                </button>
+                                                {isFaculty && (
+                                                    <>
+                                                        <button
+                                                            onClick={(event) => {
+                                                                event.preventDefault();
+                                                                onDeleteCourse(course._id);
+                                                            }}
+                                                            className="btn btn-danger float-end"
+                                                            id="wd-delete-course-click"
+                                                        >
+                                                            Delete
+                                                        </button>
+                                                        <button
+                                                            id="wd-edit-course-click"
+                                                            onClick={(event) => {
+                                                                event.preventDefault();
+                                                                setCourse(course);
+                                                            }}
+                                                            className="btn btn-warning me-2 float-end"
+                                                        >
+                                                            Edit
+                                                        </button>
+                                                    </>
+                                                )}
                                             </CardBody>
                                         </Link>
                                     ) : (
@@ -265,25 +287,27 @@ export default function Dashboard() {
                                                     {course.description}
                                                 </CardText>
 
-                                                <button
-                                                    className="btn btn-success btn-sm me-2"
-                                                    onClick={async (e) => {
-                                                        e.preventDefault();
-                                                        await enrollInCourseApi(
-                                                            currentUser._id,
-                                                            course._id
-                                                        );
-                                                        dispatch(
-                                                            enrollInCourse({
-                                                                user: currentUser._id,
-                                                                course: course._id,
-                                                            })
-                                                        );
-                                                    }}
-                                                    id={`wd-enroll-${course._id}`}
-                                                >
-                                                    Enroll
-                                                </button>
+                                                {!isFaculty && (
+                                                    <button
+                                                        className="btn btn-success btn-sm me-2"
+                                                        onClick={async (e) => {
+                                                            e.preventDefault();
+                                                            await enrollInCourseApi(
+                                                                currentUser._id,
+                                                                course._id
+                                                            );
+                                                            dispatch(
+                                                                enrollInCourse({
+                                                                    user: currentUser._id,
+                                                                    course: course._id,
+                                                                })
+                                                            );
+                                                        }}
+                                                        id={`wd-enroll-${course._id}`}
+                                                    >
+                                                        Enroll
+                                                    </button>
+                                                )}
                                             </CardBody>
                                         </div>
                                     )}

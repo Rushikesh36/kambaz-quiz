@@ -22,7 +22,6 @@ export default function Assignments() {
     const router = useRouter();
     const dispatch = useDispatch();
 
-    // Select assignments slice (robust fallback)
     const state: any = useSelector((s: any) => s);
     const listFromStore: any[] =
         state.assignments?.assignments ??
@@ -31,11 +30,18 @@ export default function Assignments() {
         state.assignmentsSlice?.assignments ??
         [];
 
+    const currentUser = useSelector(
+        (s: any) => s.accountReducer?.currentUser
+    ) as any;
+
+    const isFaculty =
+        currentUser?.role &&
+        currentUser.role.toString().toLowerCase() === "faculty";
+
     const assignments = listFromStore.filter(
         (a: any) => String(a.course) === String(cid)
     );
 
-    // Pretty date display
     const fmtPretty = (iso?: string) => {
         if (!iso) return "—";
         const d = new Date(iso);
@@ -51,7 +57,6 @@ export default function Assignments() {
         return `${month} ${day} at ${time}`;
     };
 
-    // Load assignments on mount / cid change
     const loadAssignments = async () => {
         if (!cid) return;
         const data = await findAssignmentsForCourse(String(cid));
@@ -63,18 +68,18 @@ export default function Assignments() {
     }, [cid]);
 
     const onDelete = async (assn: any) => {
+        if (!isFaculty) return;
         const ok =
             typeof window !== "undefined" &&
             window.confirm(`Delete assignment "${assn.title ?? assn._id}"?`);
         if (!ok) return;
 
-        await deleteAssignmentById(assn._id); // DELETE on server
-        dispatch(deleteFromStore(assn._id));  // Update Redux
+        await deleteAssignmentById(assn._id);
+        dispatch(deleteFromStore(assn._id));
     };
 
     return (
         <div id="wd-assignments" className="p-3">
-            {/* Header row */}
             <div className="d-flex align-items-center mb-3">
                 <div className="input-group" style={{ maxWidth: 320 }}>
                     <span className="input-group-text bg-white border-end-0">
@@ -87,28 +92,29 @@ export default function Assignments() {
                     />
                 </div>
 
-                <div className="ms-auto">
-                    <button
-                        id="wd-add-assignment-group"
-                        className="btn btn-light border me-2"
-                    >
-                        +Group
-                    </button>
+                {isFaculty && (
+                    <div className="ms-auto">
+                        <button
+                            id="wd-add-assignment-group"
+                            className="btn btn-light border me-2"
+                        >
+                            +Group
+                        </button>
 
-                    <button
-                        id="wd-add-assignment"
-                        className="btn btn-danger"
-                        type="button"
-                        onClick={() =>
-                            router.push(`/Courses/${cid}/Assignments/Editor`)
-                        }
-                    >
-                        + Assignment
-                    </button>
-                </div>
+                        <button
+                            id="wd-add-assignment"
+                            className="btn btn-danger"
+                            type="button"
+                            onClick={() =>
+                                router.push(`/Courses/${cid}/Assignments/Editor`)
+                            }
+                        >
+                            + Assignment
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* Assignments box */}
             <div className="border rounded" id="wd-assignments-box">
                 <div className="d-flex align-items-center border-bottom px-3 py-2 fw-semibold">
                     <span className="me-2">
@@ -129,8 +135,7 @@ export default function Assignments() {
 
                 {assignments.length === 0 && (
                     <div className="alert alert-warning m-3" role="alert">
-                        No assignments found in store for this course. Check Provider
-                        scope and slice key.
+                        No assignments found in store for this course.
                     </div>
                 )}
 
@@ -150,25 +155,26 @@ export default function Assignments() {
                                     <RiFileEditLine className="me-2 fs-3 text-success" />
                                 </span>
 
-                                {/* Assignment title + info */}
                                 <div className="flex-fill">
                                     <div className="fw-semibold mb-1">
-                                        <Link
-                                            href={`/Courses/${cid}/Assignments/${assn._id}`}
-                                            className="text-decoration-none text-dark"
-                                        >
-                                            {assn.title ?? assn._id}
-                                        </Link>
+                                        {isFaculty ? (
+                                            <Link
+                                                href={`/Courses/${cid}/Assignments/${assn._id}`}
+                                                className="text-decoration-none text-dark"
+                                            >
+                                                {assn.title ?? assn._id}
+                                            </Link>
+                                        ) : (
+                                            <span className="text-dark">
+                                                {assn.title ?? assn._id}
+                                            </span>
+                                        )}
                                     </div>
 
-                                    {/* Restored from old code */}
                                     <div className="small">
-                                        <Link
-                                            href="#"
-                                            className="text-danger text-decoration-none me-2"
-                                        >
+                                        <span className="text-danger me-2">
                                             Multiple Modules
-                                        </Link>
+                                        </span>
                                         <span className="text-muted">
                                             | <b>Not available until</b>{" "}
                                             {fmtPretty(assn.availableFrom)} |
@@ -181,17 +187,18 @@ export default function Assignments() {
                                     </div>
                                 </div>
 
-                                {/* Actions */}
                                 <div className="ms-3 d-flex align-items-center gap-3">
-                                    <button
-                                        id={`wd-delete-${assn._id}`}
-                                        type="button"
-                                        className="btn btn-link text-danger p-0"
-                                        onClick={() => onDelete(assn)}
-                                        title="Delete assignment"
-                                    >
-                                        <FiTrash2 size={18} />
-                                    </button>
+                                    {isFaculty && (
+                                        <button
+                                            id={`wd-delete-${assn._id}`}
+                                            type="button"
+                                            className="btn btn-link text-danger p-0"
+                                            onClick={() => onDelete(assn)}
+                                            title="Delete assignment"
+                                        >
+                                            <FiTrash2 size={18} />
+                                        </button>
+                                    )}
 
                                     <span className="text-success fs-5">
                                         <FaCheckCircle className="text-success me-1 fs-5" />
