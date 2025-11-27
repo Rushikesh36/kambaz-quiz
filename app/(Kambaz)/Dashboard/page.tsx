@@ -103,7 +103,7 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (!currentUser) {
-            router.push("Account/Signin");
+            router.push("/Account/Signin");
             return;
         }
         fetchCourses();
@@ -218,27 +218,25 @@ export default function Dashboard() {
                                                 </CardText>
 
                                                 <div className="mb-2">
-                                                    {!isFaculty && (
-                                                        <button
-                                                            className="btn btn-danger btn-sm me-2"
-                                                            onClick={async (e) => {
-                                                                e.preventDefault();
-                                                                await unenrollFromCourseApi(
-                                                                    currentUser._id,
-                                                                    course._id
-                                                                );
-                                                                dispatch(
-                                                                    unenrollFromCourse({
-                                                                        user: currentUser._id,
-                                                                        course: course._id,
-                                                                    })
-                                                                );
-                                                            }}
-                                                            id={`wd-unenroll-${course._id}`}
-                                                        >
-                                                            Unenroll
-                                                        </button>
-                                                    )}
+                                                    <button
+                                                        className="btn btn-danger btn-sm me-2"
+                                                        onClick={async (e) => {
+                                                            e.preventDefault();
+                                                            await unenrollFromCourseApi(
+                                                                currentUser._id,
+                                                                course._id
+                                                            );
+                                                            dispatch(
+                                                                unenrollFromCourse({
+                                                                    user: currentUser._id,
+                                                                    course: course._id,
+                                                                })
+                                                            );
+                                                        }}
+                                                        id={`wd-unenroll-${course._id}`}
+                                                    >
+                                                        Unenroll
+                                                    </button>
                                                 </div>
 
                                                 <Button variant="primary">Go</Button>
@@ -287,27 +285,25 @@ export default function Dashboard() {
                                                     {course.description}
                                                 </CardText>
 
-                                                {!isFaculty && (
-                                                    <button
-                                                        className="btn btn-success btn-sm me-2"
-                                                        onClick={async (e) => {
-                                                            e.preventDefault();
-                                                            await enrollInCourseApi(
-                                                                currentUser._id,
-                                                                course._id
-                                                            );
-                                                            dispatch(
-                                                                enrollInCourse({
-                                                                    user: currentUser._id,
-                                                                    course: course._id,
-                                                                })
-                                                            );
-                                                        }}
-                                                        id={`wd-enroll-${course._id}`}
-                                                    >
-                                                        Enroll
-                                                    </button>
-                                                )}
+                                                <button
+                                                    className="btn btn-success btn-sm me-2"
+                                                    onClick={async (e) => {
+                                                        e.preventDefault();
+                                                        await enrollInCourseApi(
+                                                            currentUser._id,
+                                                            course._id
+                                                        );
+                                                        dispatch(
+                                                            enrollInCourse({
+                                                                user: currentUser._id,
+                                                                course: course._id,
+                                                            })
+                                                        );
+                                                    }}
+                                                    id={`wd-enroll-${course._id}`}
+                                                >
+                                                    Enroll
+                                                </button>
                                             </CardBody>
                                         </div>
                                     )}
