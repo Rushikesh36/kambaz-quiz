@@ -1,39 +1,49 @@
+// app/(Kambaz)/Courses/[cid]/Enrollments/reducer.ts
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
+interface Enrollment {
+    _id?: string;
+    user: string;
+    course: string;
+}
 
-import { createSlice } from "@reduxjs/toolkit";
-import { enrollments as dbEnrollments } from "../../../Database";
-import { v4 as uuidv4 } from "uuid";
+interface EnrollmentsState {
+    enrollments: Enrollment[];
+}
 
-const initialState = {
-    enrollments: dbEnrollments,
+const initialState: EnrollmentsState = {
+    enrollments: [],
 };
 
 const enrollmentsSlice = createSlice({
     name: "enrollments",
     initialState,
     reducers: {
-        enrollInCourse: (state, { payload }) => {
-            const { user, course } = payload;
-            const alreadyEnrolled = state.enrollments.some(
-                (e: any) => e.user === user && e.course === course
+        setEnrollments: (state, { payload }: PayloadAction<Enrollment[]>) => {
+            state.enrollments = payload;
+        },
+
+        enrollInCourse: (state, { payload }: PayloadAction<{ user: string; course: string }>) => {
+            const exists = state.enrollments.some(
+                (e) => e.user === payload.user && e.course === payload.course
             );
-            if (!alreadyEnrolled) {
-                const newEnrollment = {
-                    _id: uuidv4(),
-                    user,
-                    course,
-                };
-                state.enrollments = [...state.enrollments, newEnrollment] as any;
+            if (!exists) {
+                state.enrollments.push({ user: payload.user, course: payload.course });
             }
         },
-        unenrollFromCourse: (state, { payload }) => {
-            const { user, course } = payload;
+
+        unenrollFromCourse: (state, { payload }: PayloadAction<{ user: string; course: string }>) => {
             state.enrollments = state.enrollments.filter(
-                (e: any) => !(e.user === user && e.course === course)
+                (e) => !(e.user === payload.user && e.course === payload.course)
             );
         },
     },
 });
 
-export const { enrollInCourse, unenrollFromCourse } = enrollmentsSlice.actions;
+export const {
+    setEnrollments,
+    enrollInCourse,
+    unenrollFromCourse,
+} = enrollmentsSlice.actions;
+
 export default enrollmentsSlice.reducer;
