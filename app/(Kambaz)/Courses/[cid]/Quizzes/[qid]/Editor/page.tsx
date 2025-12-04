@@ -145,7 +145,8 @@ export default function QuizEditor() {
 
     const addChoiceToQuestion = () => {
         const choices = questionForm.choices || [];
-        const isCorrect = questionForm.type === "FILL_IN_BLANK";
+        // For fill-in-blank, all answers are correct; for multiple choice, new answers are incorrect by default
+        const isCorrect = questionForm.type === "FILL_IN_BLANK" ? true : false;
         setQuestionField("choices", [...choices, { text: "", isCorrect }]);
     };
 
@@ -159,6 +160,10 @@ export default function QuizEditor() {
     const updateChoiceInQuestion = (index: number, field: string, value: any) => {
         const choices = [...(questionForm.choices || [])];
         choices[index] = { ...choices[index], [field]: value };
+        // For fill-in-blank, always keep isCorrect as true
+        if (questionForm.type === "FILL_IN_BLANK" && field === "text") {
+            choices[index].isCorrect = true;
+        }
         setQuestionField("choices", choices);
     };
 
@@ -469,17 +474,29 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
 
             {form.type === "FILL_IN_BLANK" && (
                 <div className="mb-3">
-                    <label className="form-label">Possible Correct Answers</label>
+                    <label className="form-label">Correct Answer(s)</label>
+                    <small className="form-text text-muted d-block mb-2">
+                        Add all possible correct answers (e.g., &quot;Paris&quot;, &quot;paris&quot;). Answers are case-insensitive.
+                    </small>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
                         <div key={idx} className="d-flex gap-2 mb-2">
-                            <input type="text" className="form-control" placeholder="Enter a possible correct answer" value={choice.text} onChange={(e) => updateChoice(idx, "text", e.target.value)} />
+                            <input 
+                                type="text" 
+                                className="form-control" 
+                                placeholder={idx === 0 ? "Enter the correct answer" : "Enter alternative answer (optional)"} 
+                                value={choice.text} 
+                                onChange={(e) => updateChoice(idx, "text", e.target.value)} 
+                            />
                             {(form.choices || []).length > 1 && (
                                 <button className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
                             )}
                         </div>
                     ))}
-                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Answer</button>
+                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Alternative Answer</button>
+                    <small className="form-text text-muted d-block mt-2">
+                        Tip: Use underscores in your question to show the blank (e.g., &quot;The capital of France is ______&quot;)
+                    </small>
                 </div>
             )}
 
