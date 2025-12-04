@@ -448,11 +448,11 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                             <input type="radio" checked={choice.isCorrect} onChange={() => setCorrectChoice(idx)} />
                             <input type="text" className="form-control" value={choice.text} onChange={(e) => updateChoice(idx, "text", e.target.value)} />
                             {(form.choices || []).length > 2 && (
-                                <button className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
+                                <button type="button" className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
                             )}
                         </div>
                     ))}
-                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Choice</button>
+                    <button type="button" className="btn btn-sm btn-light" onClick={addChoice}>+ Add Choice</button>
                 </div>
             )}
 
@@ -474,9 +474,14 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
 
             {form.type === "FILL_IN_BLANK" && (
                 <div className="mb-3">
+                    <div className="alert alert-info">
+                        <strong>Instructions:</strong> In the Question field above, type your question with underscores (______) to show where the blank goes.
+                        <br />
+                        Example: &quot;The capital of France is ______&quot;
+                    </div>
                     <label className="form-label">Correct Answer(s)</label>
                     <small className="form-text text-muted d-block mb-2">
-                        Add all possible correct answers (e.g., &quot;Paris&quot;, &quot;paris&quot;). Answers are case-insensitive.
+                        Enter the correct answer(s) that students should type. Answers are case-insensitive.
                     </small>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
@@ -484,25 +489,22 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                             <input 
                                 type="text" 
                                 className="form-control" 
-                                placeholder={idx === 0 ? "Enter the correct answer" : "Enter alternative answer (optional)"} 
+                                placeholder={idx === 0 ? "Enter the correct answer (e.g., Paris)" : "Enter alternative answer (optional, e.g., paris)"} 
                                 value={choice.text} 
                                 onChange={(e) => updateChoice(idx, "text", e.target.value)} 
                             />
                             {(form.choices || []).length > 1 && (
-                                <button className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
+                                <button type="button" className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
                             )}
                         </div>
                     ))}
-                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Alternative Answer</button>
-                    <small className="form-text text-muted d-block mt-2">
-                        Tip: Use underscores in your question to show the blank (e.g., &quot;The capital of France is ______&quot;)
-                    </small>
+                    <button type="button" className="btn btn-sm btn-light" onClick={addChoice}>+ Add Alternative Answer</button>
                 </div>
             )}
 
             <div className="d-flex gap-2">
-                <button className="btn btn-light border" onClick={onCancel}>Cancel</button>
-                <button className="btn btn-success" onClick={onSave}>{form.isNew ? "Create Question" : "Update Question"}</button>
+                <button type="button" className="btn btn-light border" onClick={onCancel}>Cancel</button>
+                <button type="button" className="btn btn-success" onClick={onSave}>{form.isNew ? "Create Question" : "Update Question"}</button>
             </div>
         </div>
     );
