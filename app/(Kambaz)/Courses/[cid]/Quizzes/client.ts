@@ -45,14 +45,13 @@ export interface QuizAttempt {
     attemptNumber: number;
     totalPoints: number;
     score?: number;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     answers: any[];
     isComplete: boolean;
     startedAt?: string;
     submittedAt?: string;
 }
 
-// Quiz CRUD
 export const findQuizzesForCourse = async (courseId: string) => {
     const res = await axios.get(`${SERVER}/api/courses/${courseId}/quizzes`);
     return res.data;
@@ -83,7 +82,6 @@ export const publishQuiz = async (quizId: string, published: boolean) => {
     return res.data;
 };
 
-// Question CRUD
 export const findQuestionsForQuiz = async (quizId: string) => {
     const res = await axios.get(`${SERVER}/api/quizzes/${quizId}/questions`);
     return res.data;
@@ -104,7 +102,6 @@ export const deleteQuestion = async (questionId: string) => {
     return res.data;
 };
 
-// Quiz Attempts
 export const getAttemptsForUser = async (quizId: string, userId: string) => {
     const res = await axios.get(`${SERVER}/api/quizzes/${quizId}/attempts/user/${userId}`);
     return res.data;
@@ -114,12 +111,14 @@ export const startAttempt = async (quizId: string, userId: string) => {
     const res = await axios.post(`${SERVER}/api/quizzes/${quizId}/attempts`, { userId });
     return res.data;
 };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const saveAnswers = async (attemptId: string, answers: any[]) => {
     const res = await axios.put(`${SERVER}/api/attempts/${attemptId}/answers`, { answers });
     return res.data;
 };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const submitAttempt = async (attemptId: string, answers: any[]) => {
     const res = await axios.post(`${SERVER}/api/attempts/${attemptId}/submit`, { answers });
     return res.data;

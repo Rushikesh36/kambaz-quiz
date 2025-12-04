@@ -88,7 +88,7 @@ export default function QuizEditor() {
     };
 
     const handleNewQuestion = () => {
-        const newQ = {
+        setQuestionForm({
             _id: "new-" + Date.now(),
             quiz: String(qid),
             title: "",
@@ -96,13 +96,12 @@ export default function QuizEditor() {
             points: 1,
             question: "",
             choices: [
-                { text: "", isCorrect: false },
+                { text: "", isCorrect: true },
                 { text: "", isCorrect: false },
             ],
             isNew: true,
-        };
-        setQuestionForm(newQ);
-        setEditingQuestion(newQ._id);
+        });
+        setEditingQuestion("new-" + Date.now());
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -146,25 +145,26 @@ export default function QuizEditor() {
 
     const addChoiceToQuestion = () => {
         const choices = questionForm.choices || [];
-        setQuestionField("choices", [...choices, { text: "", isCorrect: false }]);
+        const isCorrect = questionForm.type === "FILL_IN_BLANK";
+        setQuestionField("choices", [...choices, { text: "", isCorrect }]);
     };
 
     const removeChoiceFromQuestion = (index: number) => {
-        const choices = [...questionForm.choices];
+        const choices = [...(questionForm.choices || [])];
         choices.splice(index, 1);
         setQuestionField("choices", choices);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateChoiceInQuestion = (index: number, field: string, value: any) => {
-        const choices = [...questionForm.choices];
+        const choices = [...(questionForm.choices || [])];
         choices[index] = { ...choices[index], [field]: value };
         setQuestionField("choices", choices);
     };
 
     const setCorrectChoiceInQuestion = (index: number) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const choices = questionForm.choices.map((c: any, i: number) => ({
+        const choices = (questionForm.choices || []).map((c: any, i: number) => ({
             ...c,
             isCorrect: i === index,
         }));
@@ -204,31 +204,17 @@ export default function QuizEditor() {
                 <div style={{ maxWidth: 700 }}>
                     <div className="mb-3">
                         <label className="form-label">Title</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={form.title || ""}
-                            onChange={(e) => set("title", e.target.value)}
-                        />
+                        <input type="text" className="form-control" value={form.title || ""} onChange={(e) => set("title", e.target.value)} />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Description</label>
-                        <textarea
-                            className="form-control"
-                            rows={4}
-                            value={form.description || ""}
-                            onChange={(e) => set("description", e.target.value)}
-                        />
+                        <textarea className="form-control" rows={4} value={form.description || ""} onChange={(e) => set("description", e.target.value)} />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Quiz Type</label>
-                        <select
-                            className="form-select"
-                            value={form.quizType || "GRADED_QUIZ"}
-                            onChange={(e) => set("quizType", e.target.value)}
-                        >
+                        <select className="form-select" value={form.quizType || "GRADED_QUIZ"} onChange={(e) => set("quizType", e.target.value)}>
                             <option value="GRADED_QUIZ">Graded Quiz</option>
                             <option value="PRACTICE_QUIZ">Practice Quiz</option>
                             <option value="GRADED_SURVEY">Graded Survey</option>
@@ -238,23 +224,13 @@ export default function QuizEditor() {
 
                     <div className="mb-3">
                         <label className="form-label">Points</label>
-                        <input
-                            type="number"
-                            className="form-control"
-                            value={form.points || 0}
-                            readOnly
-                            disabled
-                        />
+                        <input type="number" className="form-control" value={form.points || 0} readOnly disabled />
                         <small className="text-muted">Points are calculated from questions</small>
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Assignment Group</label>
-                        <select
-                            className="form-select"
-                            value={form.assignmentGroup || "QUIZZES"}
-                            onChange={(e) => set("assignmentGroup", e.target.value)}
-                        >
+                        <select className="form-select" value={form.assignmentGroup || "QUIZZES"} onChange={(e) => set("assignmentGroup", e.target.value)}>
                             <option value="QUIZZES">Quizzes</option>
                             <option value="EXAMS">Exams</option>
                             <option value="ASSIGNMENTS">Assignments</option>
@@ -263,161 +239,71 @@ export default function QuizEditor() {
                     </div>
 
                     <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="shuffleAnswers"
-                            checked={form.shuffleAnswers || false}
-                            onChange={(e) => set("shuffleAnswers", e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="shuffleAnswers">
-                            Shuffle Answers
-                        </label>
+                        <input type="checkbox" className="form-check-input" id="shuffleAnswers" checked={form.shuffleAnswers || false} onChange={(e) => set("shuffleAnswers", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="shuffleAnswers">Shuffle Answers</label>
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Time Limit (minutes)</label>
-                        <input
-                            type="number"
-                            className="form-control"
-                            value={form.timeLimit || 20}
-                            onChange={(e) => set("timeLimit", Number(e.target.value))}
-                        />
+                        <input type="number" className="form-control" value={form.timeLimit || 20} onChange={(e) => set("timeLimit", Number(e.target.value))} />
                     </div>
 
                     <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="multipleAttempts"
-                            checked={form.multipleAttempts || false}
-                            onChange={(e) => set("multipleAttempts", e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="multipleAttempts">
-                            Allow Multiple Attempts
-                        </label>
+                        <input type="checkbox" className="form-check-input" id="multipleAttempts" checked={form.multipleAttempts || false} onChange={(e) => set("multipleAttempts", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="multipleAttempts">Allow Multiple Attempts</label>
                     </div>
 
                     {form.multipleAttempts && (
                         <div className="mb-3 ms-4">
                             <label className="form-label">How Many Attempts</label>
-                            <input
-                                type="number"
-                                className="form-control"
-                                value={form.howManyAttempts || 1}
-                                onChange={(e) => set("howManyAttempts", Number(e.target.value))}
-                            />
+                            <input type="number" className="form-control" value={form.howManyAttempts || 1} onChange={(e) => set("howManyAttempts", Number(e.target.value))} />
                         </div>
                     )}
 
                     <div className="mb-3">
                         <label className="form-label">Show Correct Answers</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={form.showCorrectAnswers || "IMMEDIATELY"}
-                            onChange={(e) => set("showCorrectAnswers", e.target.value)}
-                        />
+                        <input type="text" className="form-control" value={form.showCorrectAnswers || "IMMEDIATELY"} onChange={(e) => set("showCorrectAnswers", e.target.value)} />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Access Code</label>
-                        <input
-                            type="text"
-                            className="form-control"
-                            value={form.accessCode || ""}
-                            onChange={(e) => set("accessCode", e.target.value)}
-                        />
+                        <input type="text" className="form-control" value={form.accessCode || ""} onChange={(e) => set("accessCode", e.target.value)} />
                     </div>
 
                     <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="oneQuestionAtATime"
-                            checked={form.oneQuestionAtATime !== false}
-                            onChange={(e) => set("oneQuestionAtATime", e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="oneQuestionAtATime">
-                            One Question at a Time
-                        </label>
+                        <input type="checkbox" className="form-check-input" id="oneQuestionAtATime" checked={form.oneQuestionAtATime !== false} onChange={(e) => set("oneQuestionAtATime", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="oneQuestionAtATime">One Question at a Time</label>
                     </div>
 
                     <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="webcamRequired"
-                            checked={form.webcamRequired || false}
-                            onChange={(e) => set("webcamRequired", e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="webcamRequired">
-                            Webcam Required
-                        </label>
+                        <input type="checkbox" className="form-check-input" id="webcamRequired" checked={form.webcamRequired || false} onChange={(e) => set("webcamRequired", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="webcamRequired">Webcam Required</label>
                     </div>
 
                     <div className="mb-3 form-check">
-                        <input
-                            type="checkbox"
-                            className="form-check-input"
-                            id="lockQuestions"
-                            checked={form.lockQuestionsAfterAnswering || false}
-                            onChange={(e) => set("lockQuestionsAfterAnswering", e.target.checked)}
-                        />
-                        <label className="form-check-label" htmlFor="lockQuestions">
-                            Lock Questions After Answering
-                        </label>
+                        <input type="checkbox" className="form-check-input" id="lockQuestions" checked={form.lockQuestionsAfterAnswering || false} onChange={(e) => set("lockQuestionsAfterAnswering", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="lockQuestions">Lock Questions After Answering</label>
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">
-                            Due Date <span className="text-danger">*</span>
-                        </label>
-                        <input
-                            type="datetime-local"
-                            className="form-control"
-                            value={form.dueDate || ""}
-                            onChange={(e) => set("dueDate", e.target.value)}
-                            required
-                        />
+                        <label className="form-label">Due Date <span className="text-danger">*</span></label>
+                        <input type="datetime-local" className="form-control" value={form.dueDate || ""} onChange={(e) => set("dueDate", e.target.value)} required />
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">
-                            Available From <span className="text-danger">*</span>
-                        </label>
-                        <input
-                            type="datetime-local"
-                            className="form-control"
-                            value={form.availableDate || ""}
-                            onChange={(e) => set("availableDate", e.target.value)}
-                            required
-                        />
+                        <label className="form-label">Available From <span className="text-danger">*</span></label>
+                        <input type="datetime-local" className="form-control" value={form.availableDate || ""} onChange={(e) => set("availableDate", e.target.value)} required />
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">
-                            Available Until <span className="text-danger">*</span>
-                        </label>
-                        <input
-                            type="datetime-local"
-                            className="form-control"
-                            value={form.untilDate || ""}
-                            onChange={(e) => set("untilDate", e.target.value)}
-                            required
-                        />
+                        <label className="form-label">Available Until <span className="text-danger">*</span></label>
+                        <input type="datetime-local" className="form-control" value={form.untilDate || ""} onChange={(e) => set("untilDate", e.target.value)} required />
                     </div>
 
                     <div className="d-flex justify-content-end gap-2 mt-4">
-                        <button className="btn btn-light border" onClick={handleCancel}>
-                            Cancel
-                        </button>
-                        <button className="btn btn-light border" onClick={handleSave}>
-                            Save
-                        </button>
-                        <button className="btn btn-danger" onClick={handleSaveAndPublish}>
-                            Save & Publish
-                        </button>
+                        <button className="btn btn-light border" onClick={handleCancel}>Cancel</button>
+                        <button className="btn btn-light border" onClick={handleSave}>Save</button>
+                        <button className="btn btn-danger" onClick={handleSaveAndPublish}>Save & Publish</button>
                     </div>
                 </div>
             ) : (
@@ -446,51 +332,25 @@ function QuestionsTab({ questions, editingQuestion, questionForm, onNewQuestion,
     return (
         <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5>
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    Points: {questions.reduce((sum: number, q: any) => sum + (q.points || 0), 0)}
-                </h5>
-                <button className="btn btn-danger" onClick={onNewQuestion}>
-                    + New Question
-                </button>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                <h5>Points: {questions.reduce((sum: number, q: any) => sum + (q.points || 0), 0)}</h5>
+                <button className="btn btn-danger" onClick={onNewQuestion}>+ New Question</button>
             </div>
 
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {questions.map((question: any) => (
                 <div key={question._id} className="border rounded p-3 mb-3">
                     {editingQuestion === question._id ? (
-                        <QuestionForm
-                            form={questionForm}
-                            set={setQuestionField}
-                            addChoice={addChoice}
-                            removeChoice={removeChoice}
-                            updateChoice={updateChoice}
-                            setCorrectChoice={setCorrectChoice}
-                            onSave={onSaveQuestion}
-                            onCancel={onCancelQuestion}
-                        />
+                        <QuestionForm form={questionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
                     ) : (
-                        <QuestionPreview
-                            question={question}
-                            onEdit={() => onEditQuestion(question)}
-                            onDelete={() => onDeleteQuestion(question._id)}
-                        />
+                        <QuestionPreview question={question} onEdit={() => onEditQuestion(question)} onDelete={() => onDeleteQuestion(question._id)} />
                     )}
                 </div>
             ))}
 
             {editingQuestion && editingQuestion.startsWith("new-") && (
                 <div className="border rounded p-3 mb-3">
-                    <QuestionForm
-                        form={questionForm}
-                        set={setQuestionField}
-                        addChoice={addChoice}
-                        removeChoice={removeChoice}
-                        updateChoice={updateChoice}
-                        setCorrectChoice={setCorrectChoice}
-                        onSave={onSaveQuestion}
-                        onCancel={onCancelQuestion}
-                    />
+                    <QuestionForm form={questionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
                 </div>
             )}
         </div>
@@ -508,30 +368,22 @@ function QuestionPreview({ question, onEdit, onDelete }: any) {
                     <span className="ms-2 text-muted">{question.points} pts</span>
                 </div>
                 <div>
-                    <button className="btn btn-sm btn-light me-1" onClick={onEdit}>
-                        Edit
-                    </button>
-                    <button className="btn btn-sm btn-danger" onClick={onDelete}>
-                        Delete
-                    </button>
+                    <button className="btn btn-sm btn-light me-1" onClick={onEdit}>Edit</button>
+                    <button className="btn btn-sm btn-danger" onClick={onDelete}>Delete</button>
                 </div>
             </div>
             <div className="mb-2" dangerouslySetInnerHTML={{ __html: question.question }} />
-            {question.type === "MULTIPLE_CHOICE" &&
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                question.choices?.map((choice: any, idx: number) => (
-                    <div key={idx} className="ms-3">
-                        {choice.isCorrect ? "✓" : "○"} {choice.text}
-                    </div>
-                ))}
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {question.type === "MULTIPLE_CHOICE" && question.choices?.map((choice: any, idx: number) => (
+                <div key={idx} className="ms-3">{choice.isCorrect ? "✓" : "○"} {choice.text}</div>
+            ))}
             {question.type === "TRUE_FALSE" && (
                 <div className="ms-3">Correct Answer: {question.correctAnswer ? "True" : "False"}</div>
             )}
             {question.type === "FILL_IN_BLANK" && (
                 <div className="ms-3">
-                    Possible Answers:{" "}
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {question.choices?.filter((c: any) => c.isCorrect).map((c: any) => c.text).join(", ")}
+                    Possible Answers: {question.choices?.filter((c: any) => c.isCorrect).map((c: any) => c.text).join(", ")}
                 </div>
             )}
         </div>
@@ -540,43 +392,32 @@ function QuestionPreview({ question, onEdit, onDelete }: any) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCorrectChoice, onSave, onCancel }: any) {
+    const handleTypeChange = (newType: string) => {
+        if (newType === "TRUE_FALSE") {
+            set("type", newType);
+            set("correctAnswer", true);
+            set("choices", null);
+        } else if (newType === "FILL_IN_BLANK") {
+            set("type", newType);
+            set("choices", [{ text: "", isCorrect: true }]);
+            set("correctAnswer", null);
+        } else {
+            set("type", newType);
+            set("choices", [{ text: "", isCorrect: true }, { text: "", isCorrect: false }]);
+            set("correctAnswer", null);
+        }
+    };
+
     return (
         <div>
             <div className="mb-3">
                 <label className="form-label">Title</label>
-                <input
-                    type="text"
-                    className="form-control"
-                    value={form.title || ""}
-                    onChange={(e) => set("title", e.target.value)}
-                />
+                <input type="text" className="form-control" value={form.title || ""} onChange={(e) => set("title", e.target.value)} />
             </div>
 
             <div className="mb-3">
                 <label className="form-label">Question Type</label>
-                <select
-                    className="form-select"
-                    value={form.type || "MULTIPLE_CHOICE"}
-                    onChange={(e) => {
-                        const newType = e.target.value;
-                        if (newType === "TRUE_FALSE") {
-                            set("type", newType);
-                            set("correctAnswer", true);
-                            set("choices", undefined);
-                        } else if (newType === "FILL_IN_BLANK") {
-                            set("type", newType);
-                            set("choices", [{ text: "", isCorrect: true }]);
-                            set("correctAnswer", undefined);
-                        } else {
-                            set("type", newType);
-                            set("choices", [
-                                { text: "", isCorrect: false },
-                                { text: "", isCorrect: false },
-                            ]);
-                            set("correctAnswer", undefined);
-                        }
-                    }}
-                >
+                <select className="form-select" value={form.type || "MULTIPLE_CHOICE"} onChange={(e) => handleTypeChange(e.target.value)}>
                     <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                     <option value="TRUE_FALSE">True/False</option>
                     <option value="FILL_IN_BLANK">Fill in the Blank</option>
@@ -585,22 +426,12 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
 
             <div className="mb-3">
                 <label className="form-label">Points</label>
-                <input
-                    type="number"
-                    className="form-control"
-                    value={form.points || 1}
-                    onChange={(e) => set("points", Number(e.target.value))}
-                />
+                <input type="number" className="form-control" value={form.points || 1} onChange={(e) => set("points", Number(e.target.value))} />
             </div>
 
             <div className="mb-3">
                 <label className="form-label">Question</label>
-                <textarea
-                    className="form-control"
-                    rows={3}
-                    value={form.question || ""}
-                    onChange={(e) => set("question", e.target.value)}
-                />
+                <textarea className="form-control" rows={3} value={form.question || ""} onChange={(e) => set("question", e.target.value)} />
             </div>
 
             {form.type === "MULTIPLE_CHOICE" && (
@@ -609,30 +440,14 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
                         <div key={idx} className="d-flex gap-2 mb-2">
-                            <input
-                                type="radio"
-                                checked={choice.isCorrect}
-                                onChange={() => setCorrectChoice(idx)}
-                            />
-                            <input
-                                type="text"
-                                className="form-control"
-                                value={choice.text}
-                                onChange={(e) => updateChoice(idx, "text", e.target.value)}
-                            />
+                            <input type="radio" checked={choice.isCorrect} onChange={() => setCorrectChoice(idx)} />
+                            <input type="text" className="form-control" value={choice.text} onChange={(e) => updateChoice(idx, "text", e.target.value)} />
                             {(form.choices || []).length > 2 && (
-                                <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => removeChoice(idx)}
-                                >
-                                    Remove
-                                </button>
+                                <button className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
                             )}
                         </div>
                     ))}
-                    <button className="btn btn-sm btn-light" onClick={addChoice}>
-                        + Add Choice
-                    </button>
+                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Choice</button>
                 </div>
             )}
 
@@ -641,21 +456,11 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                     <label className="form-label">Correct Answer</label>
                     <div>
                         <div className="form-check">
-                            <input
-                                type="radio"
-                                className="form-check-input"
-                                checked={form.correctAnswer === true}
-                                onChange={() => set("correctAnswer", true)}
-                            />
+                            <input type="radio" className="form-check-input" checked={form.correctAnswer === true} onChange={() => set("correctAnswer", true)} />
                             <label className="form-check-label">True</label>
                         </div>
                         <div className="form-check">
-                            <input
-                                type="radio"
-                                className="form-check-input"
-                                checked={form.correctAnswer === false}
-                                onChange={() => set("correctAnswer", false)}
-                            />
+                            <input type="radio" className="form-check-input" checked={form.correctAnswer === false} onChange={() => set("correctAnswer", false)} />
                             <label className="form-check-label">False</label>
                         </div>
                     </div>
@@ -668,42 +473,19 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
                         <div key={idx} className="d-flex gap-2 mb-2">
-                            <input
-                                type="text"
-                                className="form-control"
-                                placeholder="Enter a possible correct answer"
-                                value={choice.text}
-                                onChange={(e) => updateChoice(idx, "text", e.target.value)}
-                            />
+                            <input type="text" className="form-control" placeholder="Enter a possible correct answer" value={choice.text} onChange={(e) => updateChoice(idx, "text", e.target.value)} />
                             {(form.choices || []).length > 1 && (
-                                <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => removeChoice(idx)}
-                                >
-                                    Remove
-                                </button>
+                                <button className="btn btn-sm btn-danger" onClick={() => removeChoice(idx)}>Remove</button>
                             )}
                         </div>
                     ))}
-                    <button
-                        className="btn btn-sm btn-light"
-                        onClick={() => {
-                            const choices = form.choices || [];
-                            set("choices", [...choices, { text: "", isCorrect: true }]);
-                        }}
-                    >
-                        + Add Answer
-                    </button>
+                    <button className="btn btn-sm btn-light" onClick={addChoice}>+ Add Answer</button>
                 </div>
             )}
 
             <div className="d-flex gap-2">
-                <button className="btn btn-light border" onClick={onCancel}>
-                    Cancel
-                </button>
-                <button className="btn btn-success" onClick={onSave}>
-                    {form.isNew ? "Create Question" : "Update Question"}
-                </button>
+                <button className="btn btn-light border" onClick={onCancel}>Cancel</button>
+                <button className="btn btn-success" onClick={onSave}>{form.isNew ? "Create Question" : "Update Question"}</button>
             </div>
         </div>
     );
