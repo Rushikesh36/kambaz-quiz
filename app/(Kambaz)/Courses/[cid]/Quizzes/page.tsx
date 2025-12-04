@@ -32,6 +32,8 @@ export default function Quizzes() {
     const loadQuizzes = async () => {
         if (!cid) return;
         const data = await client.findQuizzesForCourse(String(cid));
+        console.log("Loaded quizzes from server:", data);
+        console.log("Current course ID:", cid);
         dispatch(setQuizzes(data));
     };
 
@@ -116,6 +118,11 @@ export default function Quizzes() {
         (q: any) => String(q.course) === String(cid)
     );
 
+    console.log("All quizzes in Redux:", quizzes);
+    console.log("Course ID:", cid);
+    console.log("Filtered quizzes for this course:", courseQuizzes);
+    console.log("Is Faculty:", isFaculty);
+
     return (
         <div className="p-3">
             {isFaculty && (
@@ -126,17 +133,16 @@ export default function Quizzes() {
                 </div>
             )}
 
-            {courseQuizzes.length === 0 && (
+            {courseQuizzes.length === 0 ? (
                 <div className="alert alert-info">
                     {isFaculty
                         ? "No quizzes yet. Click '+ Quiz' to create one."
                         : "No quizzes available for this course."}
                 </div>
-            )}
-
-            <ul className="list-group">
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {courseQuizzes.map((quiz: any) => (
+            ) : (
+                <ul className="list-group">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {courseQuizzes.map((quiz: any) => (
                     <li key={quiz._id} className="list-group-item">
                         <div className="d-flex align-items-start">
                             <span className="me-2">
@@ -218,6 +224,7 @@ export default function Quizzes() {
                     </li>
                 ))}
             </ul>
+            )}
         </div>
     );
 }
