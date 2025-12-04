@@ -11,6 +11,7 @@ export default function PreviewQuiz() {
     const qid = params.qid ? decodeURIComponent(String(params.qid)) : "";
     
     const router = useRouter();
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [quiz, setQuiz] = useState<any>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,6 +23,7 @@ export default function PreviewQuiz() {
     const [previewScore, setPreviewScore] = useState(0);
     const [startTime, setStartTime] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
     const currentUser = state.accountReducer?.currentUser;
@@ -29,6 +31,7 @@ export default function PreviewQuiz() {
 
     useEffect(() => {
         loadQuiz();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [qid]);
 
     useEffect(() => {
@@ -43,6 +46,7 @@ export default function PreviewQuiz() {
             }
         }, 1000);
         return () => clearInterval(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [quiz, startTime]);
 
     const loadQuiz = async () => {
@@ -52,10 +56,10 @@ export default function PreviewQuiz() {
 
         const questionsData = await client.findQuestionsForQuiz(String(qid));
         setQuestions(questionsData);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setPreviewAnswers(questionsData.map((q: any) => ({ question: q._id, answer: "" })));
         setStartTime(new Date());
     };
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handleAnswerChange = (value: any) => {
         const newAnswers = [...previewAnswers];
@@ -85,7 +89,6 @@ export default function PreviewQuiz() {
             let isCorrect = false;
 
             if (question.type === "MULTIPLE_CHOICE") {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const selected = question.choices.find((c: any) => c.text === answer.answer);
                 isCorrect = selected?.isCorrect || false;
             } else if (question.type === "TRUE_FALSE") {
@@ -93,7 +96,6 @@ export default function PreviewQuiz() {
             } else if (question.type === "FILL_IN_BLANK") {
                 const answerLower = String(answer.answer).toLowerCase().trim();
                 isCorrect = question.choices.some(
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
                 );
             }
@@ -125,12 +127,12 @@ export default function PreviewQuiz() {
                 </div>
 
                 <div className="mt-4">
-                    {questions.map((question, idx) => {
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {questions.map((question: any, idx: number) => {
                         const answer = previewAnswers[idx];
                         let isCorrect = false;
 
                         if (question.type === "MULTIPLE_CHOICE") {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             const selected = question.choices.find((c: any) => c.text === answer.answer);
                             isCorrect = selected?.isCorrect || false;
                         } else if (question.type === "TRUE_FALSE") {
@@ -138,7 +140,6 @@ export default function PreviewQuiz() {
                         } else if (question.type === "FILL_IN_BLANK") {
                             const answerLower = String(answer.answer).toLowerCase().trim();
                             isCorrect = question.choices.some(
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
                             );
                         }
@@ -164,14 +165,11 @@ export default function PreviewQuiz() {
                                     <div className="mt-2 text-muted">
                                         <strong>Correct Answer: </strong>
                                         {question.type === "MULTIPLE_CHOICE" &&
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                             question.choices.find((c: any) => c.isCorrect)?.text}
                                         {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
                                         {question.type === "FILL_IN_BLANK" &&
                                             question.choices
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 .filter((c: any) => c.isCorrect)
-                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 .map((c: any) => c.text)
                                                 .join(", ")}
                                     </div>
@@ -183,7 +181,7 @@ export default function PreviewQuiz() {
 
                 <button
                     className="btn btn-primary"
-                    onClick={() => router.push(`/Kambaz/Courses/${cid}/Quizzes/${qid}/Editor`)}
+                    onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`)}
                 >
                     Edit Quiz
                 </button>

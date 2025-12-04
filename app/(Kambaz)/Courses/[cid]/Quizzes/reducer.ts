@@ -1,13 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     quizzes: [] as any[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     questions: [] as any[],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentQuiz: null as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     currentAttempt: null as any,
 };
 
@@ -22,7 +18,6 @@ const quizzesSlice = createSlice({
             state.quizzes = [...state.quizzes, payload];
         },
         updateQuiz: (state, { payload }) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             state.quizzes = state.quizzes.map((q: any) =>
                 q._id === payload._id ? payload : q
             );
@@ -31,7 +26,6 @@ const quizzesSlice = createSlice({
             }
         },
         deleteQuiz: (state, { payload: quizId }) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             state.quizzes = state.quizzes.filter((q: any) => q._id !== quizId);
         },
         setCurrentQuiz: (state, { payload }) => {
@@ -44,13 +38,11 @@ const quizzesSlice = createSlice({
             state.questions = [...state.questions, payload];
         },
         updateQuestion: (state, { payload }) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             state.questions = state.questions.map((q: any) =>
                 q._id === payload._id ? payload : q
             );
         },
         deleteQuestion: (state, { payload: questionId }) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             state.questions = state.questions.filter((q: any) => q._id !== questionId);
         },
         setCurrentAttempt: (state, { payload }) => {

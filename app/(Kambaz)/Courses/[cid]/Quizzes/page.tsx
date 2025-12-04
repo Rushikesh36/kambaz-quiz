@@ -9,11 +9,14 @@ import * as client from "./client";
 import { setQuizzes, deleteQuiz as deleteFromStore, updateQuiz } from "./reducer";
 
 export default function Quizzes() {
-    const { cid } = useParams();
+    const params = useParams() as { cid?: string };
+    const cid = params.cid ? decodeURIComponent(String(params.cid)) : "";
+    
     const router = useRouter();
     const dispatch = useDispatch();
     const [contextMenuQuiz, setContextMenuQuiz] = useState<string | null>(null);
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const quizzes = (state.quizzesReducer?.quizzes || []) as any[];
@@ -23,6 +26,7 @@ export default function Quizzes() {
 
     useEffect(() => {
         loadQuizzes();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [cid]);
 
     const loadQuizzes = async () => {
@@ -56,7 +60,7 @@ export default function Quizzes() {
         };
         const created = await client.createQuiz(String(cid), newQuiz);
         dispatch(setQuizzes([...quizzes, created]));
-        router.push(`/Kambaz/Courses/${cid}/Quizzes/${created._id}`);
+        router.push(`/Courses/${cid}/Quizzes/${created._id}`);
     };
 
     const handleDelete = async (quizId: string) => {
@@ -67,14 +71,14 @@ export default function Quizzes() {
         dispatch(deleteFromStore(quizId));
         setContextMenuQuiz(null);
     };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const handlePublishToggle = async (quiz: any) => {
         if (!isFaculty) return;
         const updated = await client.publishQuiz(quiz._id, !quiz.published);
         dispatch(updateQuiz(updated));
         setContextMenuQuiz(null);
     };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const getAvailabilityStatus = (quiz: any) => {
         const now = new Date();
         const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
@@ -101,14 +105,14 @@ export default function Quizzes() {
         });
     };
 
-    const sortedQuizzes = [...quizzes].sort((a, b) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sortedQuizzes = [...quizzes].sort((a: any, b: any) => {
         const dateA = a.availableDate ? new Date(a.availableDate).getTime() : 0;
         const dateB = b.availableDate ? new Date(b.availableDate).getTime() : 0;
         return dateB - dateA;
     });
 
     const courseQuizzes = sortedQuizzes.filter(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (q: any) => String(q.course) === String(cid)
     );
 
@@ -131,7 +135,7 @@ export default function Quizzes() {
             )}
 
             <ul className="list-group">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {courseQuizzes.map((quiz: any) => (
                     <li key={quiz._id} className="list-group-item">
                         <div className="d-flex align-items-start">
@@ -150,7 +154,7 @@ export default function Quizzes() {
                                         className="fw-bold text-primary"
                                         style={{ cursor: "pointer" }}
                                         onClick={() =>
-                                            router.push(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}`)
+                                            router.push(`/Courses/${cid}/Quizzes/${quiz._id}`)
                                         }
                                     >
                                         {quiz.title}
@@ -188,7 +192,7 @@ export default function Quizzes() {
                                             <button
                                                 className="dropdown-item"
                                                 onClick={() => {
-                                                    router.push(`/Kambaz/Courses/${cid}/Quizzes/${quiz._id}/Editor`);
+                                                    router.push(`/Courses/${cid}/Quizzes/${quiz._id}/Editor`);
                                                     setContextMenuQuiz(null);
                                                 }}
                                             >

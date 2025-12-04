@@ -40,7 +40,7 @@ export default function QuizDetails() {
     };
 
     const handleTakeQuiz = () => {
-        router.push(`/Kambaz/Courses/${cid}/Quizzes/${qid}/Preview`);
+        router.push(`/Courses/${cid}/Quizzes/${qid}/Preview`);
     };
 
     if (!quiz) {
@@ -57,7 +57,7 @@ export default function QuizDetails() {
                             <button
                                 className="btn btn-light border"
                                 onClick={() =>
-                                    router.push(`/Kambaz/Courses/${cid}/Quizzes/${qid}/Preview`)
+                                    router.push(`/Courses/${cid}/Quizzes/${qid}/Preview`)
                                 }
                             >
                                 Preview
@@ -65,7 +65,7 @@ export default function QuizDetails() {
                             <button
                                 className="btn btn-light border"
                                 onClick={() =>
-                                    router.push(`/Kambaz/Courses/${cid}/Quizzes/${qid}/Editor`)
+                                    router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`)
                                 }
                             >
                                 Edit
