@@ -68,8 +68,27 @@ export default function PreviewQuiz() {
 
         const questionsData = await client.findQuestionsForQuiz(String(qid));
         setQuestions(questionsData);
+        
+        // Pre-fill answers for faculty preview
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setAnswers(questionsData.map((q: any) => ({ question: q._id, answer: "" })));
+        const initialAnswers = questionsData.map((q: any) => {
+            if (isFaculty) {
+                // Pre-fill correct answers for faculty
+                if (q.type === "MULTIPLE_CHOICE") {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const correctChoice = q.choices.find((c: any) => c.isCorrect);
+                    return { question: q._id, answer: correctChoice?.text || "" };
+                } else if (q.type === "TRUE_FALSE") {
+                    return { question: q._id, answer: q.correctAnswer };
+                } else if (q.type === "FILL_IN_BLANK") {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const correctAnswer = q.choices.find((c: any) => c.isCorrect);
+                    return { question: q._id, answer: correctAnswer?.text || "" };
+                }
+            }
+            return { question: q._id, answer: "" };
+        });
+        setAnswers(initialAnswers);
 
         if (!isFaculty) {
             const attempts = await client.getAttemptsForUser(String(qid), currentUser._id);
@@ -396,7 +415,13 @@ export default function PreviewQuiz() {
                         {currentQuestion.type === "FILL_IN_BLANK" && (
                             <div>
                                 <label className="form-label">Your Answer</label>
-                                <input type="text" className="form-control" value={currentAnswer?.answer || ""} onChange={(e) => handleAnswerChange(e.target.value)} />
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    value={typeof currentAnswer?.answer === 'string' ? currentAnswer.answer : String(currentAnswer?.answer || "")} 
+                                    onChange={(e) => handleAnswerChange(e.target.value)}
+                                    placeholder="Type your answer here"
+                                />
                             </div>
                         )}
 
