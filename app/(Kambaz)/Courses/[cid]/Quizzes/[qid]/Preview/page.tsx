@@ -52,10 +52,18 @@ export default function PreviewQuiz() {
     const loadQuiz = async () => {
         if (!qid) return;
         const quizData = await client.findQuizById(String(qid));
+        
+        if (!isFaculty && !quizData.published) {
+            alert("This quiz is not yet published");
+            router.push(`/Courses/${cid}/Quizzes`);
+            return;
+        }
+        
         setQuiz(quizData);
 
         const questionsData = await client.findQuestionsForQuiz(String(qid));
         setQuestions(questionsData);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         setPreviewAnswers(questionsData.map((q: any) => ({ question: q._id, answer: "" })));
         setStartTime(new Date());
     };
@@ -89,13 +97,16 @@ export default function PreviewQuiz() {
             let isCorrect = false;
 
             if (question.type === "MULTIPLE_CHOICE") {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const selected = question.choices.find((c: any) => c.text === answer.answer);
                 isCorrect = selected?.isCorrect || false;
             } else if (question.type === "TRUE_FALSE") {
                 isCorrect = answer.answer === question.correctAnswer;
             } else if (question.type === "FILL_IN_BLANK") {
                 const answerLower = String(answer.answer).toLowerCase().trim();
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 isCorrect = question.choices.some(
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
                 );
             }
@@ -120,10 +131,10 @@ export default function PreviewQuiz() {
     if (showResults) {
         return (
             <div className="p-3">
-                <h3>Preview Results</h3>
+                <h3>{isFaculty ? "Preview Results" : "Quiz Results"}</h3>
                 <div className="alert alert-info mt-3">
                     <h5>Score: {previewScore} out of {quiz.points}</h5>
-                    <p>This is a preview. Results are not saved.</p>
+                    {isFaculty && <p>This is a preview. Results are not saved.</p>}
                 </div>
 
                 <div className="mt-4">
@@ -133,13 +144,16 @@ export default function PreviewQuiz() {
                         let isCorrect = false;
 
                         if (question.type === "MULTIPLE_CHOICE") {
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             const selected = question.choices.find((c: any) => c.text === answer.answer);
                             isCorrect = selected?.isCorrect || false;
                         } else if (question.type === "TRUE_FALSE") {
                             isCorrect = answer.answer === question.correctAnswer;
                         } else if (question.type === "FILL_IN_BLANK") {
                             const answerLower = String(answer.answer).toLowerCase().trim();
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             isCorrect = question.choices.some(
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
                             );
                         }
@@ -165,11 +179,14 @@ export default function PreviewQuiz() {
                                     <div className="mt-2 text-muted">
                                         <strong>Correct Answer: </strong>
                                         {question.type === "MULTIPLE_CHOICE" &&
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                             question.choices.find((c: any) => c.isCorrect)?.text}
                                         {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
                                         {question.type === "FILL_IN_BLANK" &&
                                             question.choices
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 .filter((c: any) => c.isCorrect)
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 .map((c: any) => c.text)
                                                 .join(", ")}
                                     </div>
@@ -179,12 +196,14 @@ export default function PreviewQuiz() {
                     })}
                 </div>
 
-                <button
-                    className="btn btn-primary"
-                    onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`)}
-                >
-                    Edit Quiz
-                </button>
+                {isFaculty && (
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`)}
+                    >
+                        Edit Quiz
+                    </button>
+                )}
             </div>
         );
     }
@@ -194,9 +213,11 @@ export default function PreviewQuiz() {
 
     return (
         <div className="p-3">
-            <div className="alert alert-warning">
-                <strong>Preview Mode:</strong> You are previewing this quiz. Your answers will not be saved.
-            </div>
+            {isFaculty && (
+                <div className="alert alert-warning">
+                    <strong>Preview Mode:</strong> You are previewing this quiz. Your answers will not be saved.
+                </div>
+            )}
 
             <h4>{quiz.title}</h4>
             {startTime && (
@@ -277,7 +298,7 @@ export default function PreviewQuiz() {
                             </button>
                             {currentQuestionIndex === questions.length - 1 ? (
                                 <button className="btn btn-success" onClick={handleSubmitPreview}>
-                                    Submit Preview
+                                    Submit {isFaculty ? "Preview" : "Quiz"}
                                 </button>
                             ) : (
                                 <button className="btn btn-primary" onClick={handleNext}>

@@ -32,8 +32,6 @@ export default function Quizzes() {
     const loadQuizzes = async () => {
         if (!cid) return;
         const data = await client.findQuizzesForCourse(String(cid));
-        console.log("Loaded quizzes from server:", data);
-        console.log("Current course ID:", cid);
         dispatch(setQuizzes(data));
     };
 
@@ -74,6 +72,7 @@ export default function Quizzes() {
         setContextMenuQuiz(null);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const handlePublishToggle = async (quiz: any) => {
         if (!isFaculty) return;
         const updated = await client.publishQuiz(quiz._id, !quiz.published);
@@ -81,6 +80,7 @@ export default function Quizzes() {
         setContextMenuQuiz(null);
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getAvailabilityStatus = (quiz: any) => {
         const now = new Date();
         const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
@@ -114,14 +114,15 @@ export default function Quizzes() {
         return dateB - dateA;
     });
 
-    const courseQuizzes = sortedQuizzes.filter(
-        (q: any) => String(q.course) === String(cid)
-    );
-
-    console.log("All quizzes in Redux:", quizzes);
-    console.log("Course ID:", cid);
-    console.log("Filtered quizzes for this course:", courseQuizzes);
-    console.log("Is Faculty:", isFaculty);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const courseQuizzes = sortedQuizzes.filter((q: any) => {
+        const matchesCourse = String(q.course) === String(cid);
+        if (!matchesCourse) return false;
+        
+        if (!isFaculty && !q.published) return false;
+        
+        return true;
+    });
 
     return (
         <div className="p-3">
@@ -143,87 +144,87 @@ export default function Quizzes() {
                 <ul className="list-group">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {courseQuizzes.map((quiz: any) => (
-                    <li key={quiz._id} className="list-group-item">
-                        <div className="d-flex align-items-start">
-                            <span className="me-2">
-                                <BsGripVertical className="fs-4" />
-                            </span>
+                        <li key={quiz._id} className="list-group-item">
+                            <div className="d-flex align-items-start">
+                                <span className="me-2">
+                                    <BsGripVertical className="fs-4" />
+                                </span>
 
-                            <div className="flex-grow-1">
-                                <div className="d-flex align-items-center gap-2">
-                                    {quiz.published ? (
-                                        <FaCheckCircle className="text-success" />
-                                    ) : (
-                                        <FaBan className="text-danger" />
-                                    )}
-                                    <span
-                                        className="fw-bold text-primary"
-                                        style={{ cursor: "pointer" }}
-                                        onClick={() =>
-                                            router.push(`/Courses/${cid}/Quizzes/${quiz._id}`)
-                                        }
-                                    >
-                                        {quiz.title}
-                                    </span>
-                                </div>
+                                <div className="flex-grow-1">
+                                    <div className="d-flex align-items-center gap-2">
+                                        {quiz.published ? (
+                                            <FaCheckCircle className="text-success" />
+                                        ) : (
+                                            <FaBan className="text-danger" />
+                                        )}
+                                        <span
+                                            className="fw-bold text-primary"
+                                            style={{ cursor: "pointer" }}
+                                            onClick={() =>
+                                                router.push(`/Courses/${cid}/Quizzes/${quiz._id}`)
+                                            }
+                                        >
+                                            {quiz.title}
+                                        </span>
+                                    </div>
 
-                                <div className="small text-muted mt-1">
-                                    <div>{getAvailabilityStatus(quiz)}</div>
-                                    <div>
-                                        <strong>Due:</strong> {formatDate(quiz.dueDate)} |{" "}
-                                        <strong>Points:</strong> {quiz.points} |{" "}
-                                        <strong>Questions:</strong> {quiz.questionCount || 0}
+                                    <div className="small text-muted mt-1">
+                                        <div>{getAvailabilityStatus(quiz)}</div>
+                                        <div>
+                                            <strong>Due:</strong> {formatDate(quiz.dueDate)} |{" "}
+                                            <strong>Points:</strong> {quiz.points} |{" "}
+                                            <strong>Questions:</strong> {quiz.questionCount || 0}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {isFaculty && (
-                                <div className="position-relative">
-                                    <button
-                                        className="btn btn-link p-0"
-                                        onClick={() =>
-                                            setContextMenuQuiz(
-                                                contextMenuQuiz === quiz._id ? null : quiz._id
-                                            )
-                                        }
-                                    >
-                                        <BsThreeDotsVertical />
-                                    </button>
-
-                                    {contextMenuQuiz === quiz._id && (
-                                        <div
-                                            className="position-absolute end-0 mt-1 bg-white border rounded shadow-sm"
-                                            style={{ zIndex: 1000, minWidth: "150px" }}
+                                {isFaculty && (
+                                    <div className="position-relative">
+                                        <button
+                                            className="btn btn-link p-0"
+                                            onClick={() =>
+                                                setContextMenuQuiz(
+                                                    contextMenuQuiz === quiz._id ? null : quiz._id
+                                                )
+                                            }
                                         >
-                                            <button
-                                                className="dropdown-item"
-                                                onClick={() => {
-                                                    router.push(`/Courses/${cid}/Quizzes/${quiz._id}/Editor`);
-                                                    setContextMenuQuiz(null);
-                                                }}
+                                            <BsThreeDotsVertical />
+                                        </button>
+
+                                        {contextMenuQuiz === quiz._id && (
+                                            <div
+                                                className="position-absolute end-0 mt-1 bg-white border rounded shadow-sm"
+                                                style={{ zIndex: 1000, minWidth: "150px" }}
                                             >
-                                                Edit
-                                            </button>
-                                            <button
-                                                className="dropdown-item"
-                                                onClick={() => handlePublishToggle(quiz)}
-                                            >
-                                                {quiz.published ? "Unpublish" : "Publish"}
-                                            </button>
-                                            <button
-                                                className="dropdown-item text-danger"
-                                                onClick={() => handleDelete(quiz._id)}
-                                            >
-                                                Delete
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                    </li>
-                ))}
-            </ul>
+                                                <button
+                                                    className="dropdown-item"
+                                                    onClick={() => {
+                                                        router.push(`/Courses/${cid}/Quizzes/${quiz._id}/Editor`);
+                                                        setContextMenuQuiz(null);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="dropdown-item"
+                                                    onClick={() => handlePublishToggle(quiz)}
+                                                >
+                                                    {quiz.published ? "Unpublish" : "Publish"}
+                                                </button>
+                                                <button
+                                                    className="dropdown-item text-danger"
+                                                    onClick={() => handleDelete(quiz._id)}
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        </li>
+                    ))}
+                </ul>
             )}
         </div>
     );

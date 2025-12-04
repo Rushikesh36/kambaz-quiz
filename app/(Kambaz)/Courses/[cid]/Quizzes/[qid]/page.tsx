@@ -29,6 +29,13 @@ export default function QuizDetails() {
     const loadQuiz = async () => {
         if (!qid) return;
         const data = await client.findQuizById(String(qid));
+        
+        if (!isFaculty && !data.published) {
+            alert("This quiz is not yet published");
+            router.push(`/Courses/${cid}/Quizzes`);
+            return;
+        }
+        
         dispatch(setCurrentQuiz(data));
     };
 
@@ -79,10 +86,14 @@ export default function QuizDetails() {
                                 {quiz.published ? "Unpublish" : "Publish"}
                             </button>
                         </>
-                    ) : (
+                    ) : quiz.published ? (
                         <button className="btn btn-danger" onClick={handleTakeQuiz}>
                             Take the Quiz
                         </button>
+                    ) : (
+                        <div className="alert alert-warning">
+                            This quiz is not yet published
+                        </div>
                     )}
                 </div>
             </div>

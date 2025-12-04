@@ -26,11 +26,18 @@ export default function QuizEditor() {
     const quiz = state.quizzesReducer?.currentQuiz;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const questions = (state.quizzesReducer?.questions || []) as any[];
+    const currentUser = state.accountReducer?.currentUser;
+    
+    const isFaculty = currentUser?.role?.toLowerCase() === "faculty";
 
     useEffect(() => {
+        if (!isFaculty) {
+            router.push(`/Courses/${cid}/Quizzes`);
+            return;
+        }
         loadQuiz();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [qid]);
+    }, [qid, isFaculty]);
 
     useEffect(() => {
         if (quiz) {
@@ -48,6 +55,10 @@ export default function QuizEditor() {
     };
 
     const handleSave = async () => {
+        if (!form.dueDate || !form.availableDate || !form.untilDate) {
+            alert("Please fill in all date fields (Due Date, Available From, and Available Until)");
+            return;
+        }
         const updated = await client.updateQuiz(String(qid), form);
         dispatch(updateInStore(updated));
         dispatch(setCurrentQuiz(updated));
@@ -55,6 +66,10 @@ export default function QuizEditor() {
     };
 
     const handleSaveAndPublish = async () => {
+        if (!form.dueDate || !form.availableDate || !form.untilDate) {
+            alert("Please fill in all date fields (Due Date, Available From, and Available Until)");
+            return;
+        }
         const updated = await client.updateQuiz(String(qid), {
             ...form,
             published: true,
@@ -157,6 +172,10 @@ export default function QuizEditor() {
     };
 
     if (!quiz) return <div className="p-3">Loading...</div>;
+    
+    if (!isFaculty) {
+        return <div className="p-3">Access denied. Faculty only.</div>;
+    }
 
     return (
         <div className="p-3">
@@ -351,32 +370,41 @@ export default function QuizEditor() {
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Due Date</label>
+                        <label className="form-label">
+                            Due Date <span className="text-danger">*</span>
+                        </label>
                         <input
                             type="datetime-local"
                             className="form-control"
                             value={form.dueDate || ""}
                             onChange={(e) => set("dueDate", e.target.value)}
+                            required
                         />
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Available From</label>
+                        <label className="form-label">
+                            Available From <span className="text-danger">*</span>
+                        </label>
                         <input
                             type="datetime-local"
                             className="form-control"
                             value={form.availableDate || ""}
                             onChange={(e) => set("availableDate", e.target.value)}
+                            required
                         />
                     </div>
 
                     <div className="mb-3">
-                        <label className="form-label">Available Until</label>
+                        <label className="form-label">
+                            Available Until <span className="text-danger">*</span>
+                        </label>
                         <input
                             type="datetime-local"
                             className="form-control"
                             value={form.untilDate || ""}
                             onChange={(e) => set("untilDate", e.target.value)}
+                            required
                         />
                     </div>
 

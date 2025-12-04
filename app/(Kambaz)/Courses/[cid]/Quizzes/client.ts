@@ -45,6 +45,7 @@ export interface QuizAttempt {
     attemptNumber: number;
     totalPoints: number;
     score?: number;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     answers: any[];
     isComplete: boolean;
     startedAt?: string;
@@ -113,12 +114,12 @@ export const startAttempt = async (quizId: string, userId: string) => {
     const res = await axios.post(`${SERVER}/api/quizzes/${quizId}/attempts`, { userId });
     return res.data;
 };
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const saveAnswers = async (attemptId: string, answers: any[]) => {
     const res = await axios.put(`${SERVER}/api/attempts/${attemptId}/answers`, { answers });
     return res.data;
 };
-
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const submitAttempt = async (attemptId: string, answers: any[]) => {
     const res = await axios.post(`${SERVER}/api/attempts/${attemptId}/submit`, { answers });
     return res.data;
