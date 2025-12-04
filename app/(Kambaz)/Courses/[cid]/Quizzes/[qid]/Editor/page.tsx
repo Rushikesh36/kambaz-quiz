@@ -17,10 +17,15 @@ export default function QuizEditor() {
     const [activeTab, setActiveTab] = useState<"details" | "questions">("details");
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [form, setForm] = useState<any>({});
+    const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [questionForm, setQuestionForm] = useState<any>({});
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
     const quiz = state.quizzesReducer?.currentQuiz;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const questions = (state.quizzesReducer?.questions || []) as any[];
 
     useEffect(() => {
         loadQuiz();
@@ -67,266 +72,6 @@ export default function QuizEditor() {
         setForm({ ...form, [key]: value });
     };
 
-    if (activeTab === "questions") {
-        return <QuestionsTab cid={cid} qid={qid} />;
-    }
-
-    if (!quiz) return <div className="p-3">Loading...</div>;
-
-    return (
-        <div className="p-3">
-            <div className="border-bottom mb-3">
-                <ul className="nav nav-tabs">
-                    <li className="nav-item">
-                        <button
-                            className={`nav-link ${activeTab === "details" ? "active" : ""}`}
-                            onClick={() => setActiveTab("details")}
-                        >
-                            Details
-                        </button>
-                    </li>
-                    <li className="nav-item">
-                        <button
-                            className="nav-link"
-                            onClick={() => setActiveTab("questions")}
-                        >
-                            Questions
-                        </button>
-                    </li>
-                </ul>
-            </div>
-
-            <div style={{ maxWidth: 700 }}>
-                <div className="mb-3">
-                    <label className="form-label">Title</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={form.title || ""}
-                        onChange={(e) => set("title", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Description</label>
-                    <textarea
-                        className="form-control"
-                        rows={4}
-                        value={form.description || ""}
-                        onChange={(e) => set("description", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Quiz Type</label>
-                    <select
-                        className="form-select"
-                        value={form.quizType || "GRADED_QUIZ"}
-                        onChange={(e) => set("quizType", e.target.value)}
-                    >
-                        <option value="GRADED_QUIZ">Graded Quiz</option>
-                        <option value="PRACTICE_QUIZ">Practice Quiz</option>
-                        <option value="GRADED_SURVEY">Graded Survey</option>
-                        <option value="UNGRADED_SURVEY">Ungraded Survey</option>
-                    </select>
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Points</label>
-                    <input
-                        type="number"
-                        className="form-control"
-                        value={form.points || 0}
-                        readOnly
-                        disabled
-                    />
-                    <small className="text-muted">Points are calculated from questions</small>
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Assignment Group</label>
-                    <select
-                        className="form-select"
-                        value={form.assignmentGroup || "QUIZZES"}
-                        onChange={(e) => set("assignmentGroup", e.target.value)}
-                    >
-                        <option value="QUIZZES">Quizzes</option>
-                        <option value="EXAMS">Exams</option>
-                        <option value="ASSIGNMENTS">Assignments</option>
-                        <option value="PROJECT">Project</option>
-                    </select>
-                </div>
-
-                <div className="mb-3 form-check">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="shuffleAnswers"
-                        checked={form.shuffleAnswers || false}
-                        onChange={(e) => set("shuffleAnswers", e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="shuffleAnswers">
-                        Shuffle Answers
-                    </label>
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Time Limit (minutes)</label>
-                    <input
-                        type="number"
-                        className="form-control"
-                        value={form.timeLimit || 20}
-                        onChange={(e) => set("timeLimit", Number(e.target.value))}
-                    />
-                </div>
-
-                <div className="mb-3 form-check">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="multipleAttempts"
-                        checked={form.multipleAttempts || false}
-                        onChange={(e) => set("multipleAttempts", e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="multipleAttempts">
-                        Allow Multiple Attempts
-                    </label>
-                </div>
-
-                {form.multipleAttempts && (
-                    <div className="mb-3 ms-4">
-                        <label className="form-label">How Many Attempts</label>
-                        <input
-                            type="number"
-                            className="form-control"
-                            value={form.howManyAttempts || 1}
-                            onChange={(e) => set("howManyAttempts", Number(e.target.value))}
-                        />
-                    </div>
-                )}
-
-                <div className="mb-3">
-                    <label className="form-label">Show Correct Answers</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={form.showCorrectAnswers || "IMMEDIATELY"}
-                        onChange={(e) => set("showCorrectAnswers", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Access Code</label>
-                    <input
-                        type="text"
-                        className="form-control"
-                        value={form.accessCode || ""}
-                        onChange={(e) => set("accessCode", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3 form-check">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="oneQuestionAtATime"
-                        checked={form.oneQuestionAtATime !== false}
-                        onChange={(e) => set("oneQuestionAtATime", e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="oneQuestionAtATime">
-                        One Question at a Time
-                    </label>
-                </div>
-
-                <div className="mb-3 form-check">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="webcamRequired"
-                        checked={form.webcamRequired || false}
-                        onChange={(e) => set("webcamRequired", e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="webcamRequired">
-                        Webcam Required
-                    </label>
-                </div>
-
-                <div className="mb-3 form-check">
-                    <input
-                        type="checkbox"
-                        className="form-check-input"
-                        id="lockQuestions"
-                        checked={form.lockQuestionsAfterAnswering || false}
-                        onChange={(e) => set("lockQuestionsAfterAnswering", e.target.checked)}
-                    />
-                    <label className="form-check-label" htmlFor="lockQuestions">
-                        Lock Questions After Answering
-                    </label>
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Due Date</label>
-                    <input
-                        type="datetime-local"
-                        className="form-control"
-                        value={form.dueDate || ""}
-                        onChange={(e) => set("dueDate", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Available From</label>
-                    <input
-                        type="datetime-local"
-                        className="form-control"
-                        value={form.availableDate || ""}
-                        onChange={(e) => set("availableDate", e.target.value)}
-                    />
-                </div>
-
-                <div className="mb-3">
-                    <label className="form-label">Available Until</label>
-                    <input
-                        type="datetime-local"
-                        className="form-control"
-                        value={form.untilDate || ""}
-                        onChange={(e) => set("untilDate", e.target.value)}
-                    />
-                </div>
-
-                <div className="d-flex justify-content-end gap-2 mt-4">
-                    <button className="btn btn-light border" onClick={handleCancel}>
-                        Cancel
-                    </button>
-                    <button className="btn btn-light border" onClick={handleSave}>
-                        Save
-                    </button>
-                    <button className="btn btn-danger" onClick={handleSaveAndPublish}>
-                        Save & Publish
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
-    const router = useRouter();
-    const dispatch = useDispatch();
-
-    const [editingQuestion, setEditingQuestion] = useState<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [questionForm, setQuestionForm] = useState<any>({});
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const state: any = useSelector((s: any) => s);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const questions = (state.quizzesReducer?.questions || []) as any[];
-
-    const handleBackToDetails = () => {
-        router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`);
-    };
-
     const handleNewQuestion = () => {
         const newQ = {
             _id: "new-" + Date.now(),
@@ -346,34 +91,32 @@ function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleEdit = (question: any) => {
+    const handleEditQuestion = (question: any) => {
         setQuestionForm({ ...question });
         setEditingQuestion(question._id);
     };
 
-    const handleCancel = () => {
+    const handleCancelQuestionEdit = () => {
         setEditingQuestion(null);
         setQuestionForm({});
     };
 
-    const handleSave = async () => {
+    const handleSaveQuestionEdit = async () => {
         const { _id, isNew, ...data } = questionForm;
 
         if (isNew) {
             await client.createQuestion(String(qid), data);
-            const updated = await client.findQuestionsForQuiz(String(qid));
-            dispatch(setQuestions(updated));
         } else {
             await client.updateQuestion(_id, data);
-            const updated = await client.findQuestionsForQuiz(String(qid));
-            dispatch(setQuestions(updated));
         }
-
+        
+        const updated = await client.findQuestionsForQuiz(String(qid));
+        dispatch(setQuestions(updated));
         setEditingQuestion(null);
         setQuestionForm({});
     };
 
-    const handleDelete = async (questionId: string) => {
+    const handleDeleteQuestion = async (questionId: string) => {
         const ok = window.confirm("Delete this question?");
         if (!ok) return;
         await client.deleteQuestion(questionId);
@@ -382,36 +125,38 @@ function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const set = (key: string, value: any) => {
+    const setQuestionField = (key: string, value: any) => {
         setQuestionForm({ ...questionForm, [key]: value });
     };
 
-    const addChoice = () => {
+    const addChoiceToQuestion = () => {
         const choices = questionForm.choices || [];
-        set("choices", [...choices, { text: "", isCorrect: false }]);
+        setQuestionField("choices", [...choices, { text: "", isCorrect: false }]);
     };
 
-    const removeChoice = (index: number) => {
+    const removeChoiceFromQuestion = (index: number) => {
         const choices = [...questionForm.choices];
         choices.splice(index, 1);
-        set("choices", choices);
+        setQuestionField("choices", choices);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateChoice = (index: number, field: string, value: any) => {
+    const updateChoiceInQuestion = (index: number, field: string, value: any) => {
         const choices = [...questionForm.choices];
         choices[index] = { ...choices[index], [field]: value };
-        set("choices", choices);
+        setQuestionField("choices", choices);
     };
 
-    const setCorrectChoice = (index: number) => {
+    const setCorrectChoiceInQuestion = (index: number) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const choices = questionForm.choices.map((c: any, i: number) => ({
             ...c,
             isCorrect: i === index,
         }));
-        set("choices", choices);
+        setQuestionField("choices", choices);
     };
+
+    if (!quiz) return <div className="p-3">Loading...</div>;
 
     return (
         <div className="p-3">
@@ -419,24 +164,265 @@ function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
                 <ul className="nav nav-tabs">
                     <li className="nav-item">
                         <button
-                            className="nav-link"
-                            onClick={handleBackToDetails}
+                            className={`nav-link ${activeTab === "details" ? "active" : ""}`}
+                            onClick={() => setActiveTab("details")}
                         >
                             Details
                         </button>
                     </li>
                     <li className="nav-item">
-                        <button className="nav-link active">Questions</button>
+                        <button
+                            className={`nav-link ${activeTab === "questions" ? "active" : ""}`}
+                            onClick={() => setActiveTab("questions")}
+                        >
+                            Questions
+                        </button>
                     </li>
                 </ul>
             </div>
 
+            {activeTab === "details" ? (
+                <div style={{ maxWidth: 700 }}>
+                    <div className="mb-3">
+                        <label className="form-label">Title</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={form.title || ""}
+                            onChange={(e) => set("title", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Description</label>
+                        <textarea
+                            className="form-control"
+                            rows={4}
+                            value={form.description || ""}
+                            onChange={(e) => set("description", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Quiz Type</label>
+                        <select
+                            className="form-select"
+                            value={form.quizType || "GRADED_QUIZ"}
+                            onChange={(e) => set("quizType", e.target.value)}
+                        >
+                            <option value="GRADED_QUIZ">Graded Quiz</option>
+                            <option value="PRACTICE_QUIZ">Practice Quiz</option>
+                            <option value="GRADED_SURVEY">Graded Survey</option>
+                            <option value="UNGRADED_SURVEY">Ungraded Survey</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Points</label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            value={form.points || 0}
+                            readOnly
+                            disabled
+                        />
+                        <small className="text-muted">Points are calculated from questions</small>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Assignment Group</label>
+                        <select
+                            className="form-select"
+                            value={form.assignmentGroup || "QUIZZES"}
+                            onChange={(e) => set("assignmentGroup", e.target.value)}
+                        >
+                            <option value="QUIZZES">Quizzes</option>
+                            <option value="EXAMS">Exams</option>
+                            <option value="ASSIGNMENTS">Assignments</option>
+                            <option value="PROJECT">Project</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="shuffleAnswers"
+                            checked={form.shuffleAnswers || false}
+                            onChange={(e) => set("shuffleAnswers", e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="shuffleAnswers">
+                            Shuffle Answers
+                        </label>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Time Limit (minutes)</label>
+                        <input
+                            type="number"
+                            className="form-control"
+                            value={form.timeLimit || 20}
+                            onChange={(e) => set("timeLimit", Number(e.target.value))}
+                        />
+                    </div>
+
+                    <div className="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="multipleAttempts"
+                            checked={form.multipleAttempts || false}
+                            onChange={(e) => set("multipleAttempts", e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="multipleAttempts">
+                            Allow Multiple Attempts
+                        </label>
+                    </div>
+
+                    {form.multipleAttempts && (
+                        <div className="mb-3 ms-4">
+                            <label className="form-label">How Many Attempts</label>
+                            <input
+                                type="number"
+                                className="form-control"
+                                value={form.howManyAttempts || 1}
+                                onChange={(e) => set("howManyAttempts", Number(e.target.value))}
+                            />
+                        </div>
+                    )}
+
+                    <div className="mb-3">
+                        <label className="form-label">Show Correct Answers</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={form.showCorrectAnswers || "IMMEDIATELY"}
+                            onChange={(e) => set("showCorrectAnswers", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Access Code</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={form.accessCode || ""}
+                            onChange={(e) => set("accessCode", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="oneQuestionAtATime"
+                            checked={form.oneQuestionAtATime !== false}
+                            onChange={(e) => set("oneQuestionAtATime", e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="oneQuestionAtATime">
+                            One Question at a Time
+                        </label>
+                    </div>
+
+                    <div className="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="webcamRequired"
+                            checked={form.webcamRequired || false}
+                            onChange={(e) => set("webcamRequired", e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="webcamRequired">
+                            Webcam Required
+                        </label>
+                    </div>
+
+                    <div className="mb-3 form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="lockQuestions"
+                            checked={form.lockQuestionsAfterAnswering || false}
+                            onChange={(e) => set("lockQuestionsAfterAnswering", e.target.checked)}
+                        />
+                        <label className="form-check-label" htmlFor="lockQuestions">
+                            Lock Questions After Answering
+                        </label>
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Due Date</label>
+                        <input
+                            type="datetime-local"
+                            className="form-control"
+                            value={form.dueDate || ""}
+                            onChange={(e) => set("dueDate", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Available From</label>
+                        <input
+                            type="datetime-local"
+                            className="form-control"
+                            value={form.availableDate || ""}
+                            onChange={(e) => set("availableDate", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="mb-3">
+                        <label className="form-label">Available Until</label>
+                        <input
+                            type="datetime-local"
+                            className="form-control"
+                            value={form.untilDate || ""}
+                            onChange={(e) => set("untilDate", e.target.value)}
+                        />
+                    </div>
+
+                    <div className="d-flex justify-content-end gap-2 mt-4">
+                        <button className="btn btn-light border" onClick={handleCancel}>
+                            Cancel
+                        </button>
+                        <button className="btn btn-light border" onClick={handleSave}>
+                            Save
+                        </button>
+                        <button className="btn btn-danger" onClick={handleSaveAndPublish}>
+                            Save & Publish
+                        </button>
+                    </div>
+                </div>
+            ) : (
+                <QuestionsTab
+                    questions={questions}
+                    editingQuestion={editingQuestion}
+                    questionForm={questionForm}
+                    onNewQuestion={handleNewQuestion}
+                    onEditQuestion={handleEditQuestion}
+                    onCancelQuestion={handleCancelQuestionEdit}
+                    onSaveQuestion={handleSaveQuestionEdit}
+                    onDeleteQuestion={handleDeleteQuestion}
+                    setQuestionField={setQuestionField}
+                    addChoice={addChoiceToQuestion}
+                    removeChoice={removeChoiceFromQuestion}
+                    updateChoice={updateChoiceInQuestion}
+                    setCorrectChoice={setCorrectChoiceInQuestion}
+                />
+            )}
+        </div>
+    );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function QuestionsTab({ questions, editingQuestion, questionForm, onNewQuestion, onEditQuestion, onCancelQuestion, onSaveQuestion, onDeleteQuestion, setQuestionField, addChoice, removeChoice, updateChoice, setCorrectChoice }: any) {
+    return (
+        <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     Points: {questions.reduce((sum: number, q: any) => sum + (q.points || 0), 0)}
                 </h5>
-                <button className="btn btn-danger" onClick={handleNewQuestion}>
+                <button className="btn btn-danger" onClick={onNewQuestion}>
                     + New Question
                 </button>
             </div>
@@ -447,19 +433,19 @@ function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
                     {editingQuestion === question._id ? (
                         <QuestionForm
                             form={questionForm}
-                            set={set}
+                            set={setQuestionField}
                             addChoice={addChoice}
                             removeChoice={removeChoice}
                             updateChoice={updateChoice}
                             setCorrectChoice={setCorrectChoice}
-                            onSave={handleSave}
-                            onCancel={handleCancel}
+                            onSave={onSaveQuestion}
+                            onCancel={onCancelQuestion}
                         />
                     ) : (
                         <QuestionPreview
                             question={question}
-                            onEdit={() => handleEdit(question)}
-                            onDelete={() => handleDelete(question._id)}
+                            onEdit={() => onEditQuestion(question)}
+                            onDelete={() => onDeleteQuestion(question._id)}
                         />
                     )}
                 </div>
@@ -469,13 +455,13 @@ function QuestionsTab({ cid, qid }: { cid: string; qid: string }) {
                 <div className="border rounded p-3 mb-3">
                     <QuestionForm
                         form={questionForm}
-                        set={set}
+                        set={setQuestionField}
                         addChoice={addChoice}
                         removeChoice={removeChoice}
                         updateChoice={updateChoice}
                         setCorrectChoice={setCorrectChoice}
-                        onSave={handleSave}
-                        onCancel={handleCancel}
+                        onSave={onSaveQuestion}
+                        onCancel={onCancelQuestion}
                     />
                 </div>
             )}
@@ -543,7 +529,25 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                 <select
                     className="form-select"
                     value={form.type || "MULTIPLE_CHOICE"}
-                    onChange={(e) => set("type", e.target.value)}
+                    onChange={(e) => {
+                        const newType = e.target.value;
+                        if (newType === "TRUE_FALSE") {
+                            set("type", newType);
+                            set("correctAnswer", true);
+                            set("choices", undefined);
+                        } else if (newType === "FILL_IN_BLANK") {
+                            set("type", newType);
+                            set("choices", [{ text: "", isCorrect: true }]);
+                            set("correctAnswer", undefined);
+                        } else {
+                            set("type", newType);
+                            set("choices", [
+                                { text: "", isCorrect: false },
+                                { text: "", isCorrect: false },
+                            ]);
+                            set("correctAnswer", undefined);
+                        }
+                    }}
                 >
                     <option value="MULTIPLE_CHOICE">Multiple Choice</option>
                     <option value="TRUE_FALSE">True/False</option>
@@ -575,7 +579,7 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                 <div className="mb-3">
                     <label className="form-label">Choices</label>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {form.choices?.map((choice: any, idx: number) => (
+                    {(form.choices || []).map((choice: any, idx: number) => (
                         <div key={idx} className="d-flex gap-2 mb-2">
                             <input
                                 type="radio"
@@ -588,12 +592,14 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                                 value={choice.text}
                                 onChange={(e) => updateChoice(idx, "text", e.target.value)}
                             />
-                            <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => removeChoice(idx)}
-                            >
-                                Remove
-                            </button>
+                            {(form.choices || []).length > 2 && (
+                                <button
+                                    className="btn btn-sm btn-danger"
+                                    onClick={() => removeChoice(idx)}
+                                >
+                                    Remove
+                                </button>
+                            )}
                         </div>
                     ))}
                     <button className="btn btn-sm btn-light" onClick={addChoice}>
@@ -632,20 +638,23 @@ function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCor
                 <div className="mb-3">
                     <label className="form-label">Possible Correct Answers</label>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {form.choices?.map((choice: any, idx: number) => (
+                    {(form.choices || []).map((choice: any, idx: number) => (
                         <div key={idx} className="d-flex gap-2 mb-2">
                             <input
                                 type="text"
                                 className="form-control"
+                                placeholder="Enter a possible correct answer"
                                 value={choice.text}
                                 onChange={(e) => updateChoice(idx, "text", e.target.value)}
                             />
-                            <button
-                                className="btn btn-sm btn-danger"
-                                onClick={() => removeChoice(idx)}
-                            >
-                                Remove
-                            </button>
+                            {(form.choices || []).length > 1 && (
+                                <button
+                                    className="btn btn-sm btn-danger"
+                                    onClick={() => removeChoice(idx)}
+                                >
+                                    Remove
+                                </button>
+                            )}
                         </div>
                     ))}
                     <button
