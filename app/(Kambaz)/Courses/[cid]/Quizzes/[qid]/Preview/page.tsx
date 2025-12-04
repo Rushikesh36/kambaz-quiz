@@ -56,65 +56,71 @@ export default function PreviewQuiz() {
 
     const loadQuizAndCheckAttempts = async () => {
         if (!qid) return;
-        const quizData = await client.findQuizById(String(qid));
         
-        if (!isFaculty && !quizData.published) {
-            alert("This quiz is not yet published");
-            router.push(`/Courses/${cid}/Quizzes`);
-            return;
-        }
-        
-        setQuiz(quizData);
-
-        const questionsData = await client.findQuestionsForQuiz(String(qid));
-        setQuestions(questionsData);
-        
-        // Pre-fill answers for faculty preview
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const initialAnswers = questionsData.map((q: any) => {
-            if (isFaculty) {
-                // Pre-fill correct answers for faculty
-                if (q.type === "MULTIPLE_CHOICE") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const correctChoice = q.choices.find((c: any) => c.isCorrect);
-                    return { question: q._id, answer: correctChoice?.text || "" };
-                } else if (q.type === "TRUE_FALSE") {
-                    return { question: q._id, answer: q.correctAnswer };
-                } else if (q.type === "FILL_IN_BLANK") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const correctAnswer = q.choices.find((c: any) => c.isCorrect);
-                    return { question: q._id, answer: correctAnswer?.text || "" };
-                }
-            }
-            return { question: q._id, answer: "" };
-        });
-        setAnswers(initialAnswers);
-
-        if (!isFaculty) {
-            const attempts = await client.getAttemptsForUser(String(qid), currentUser._id);
-            setUserAttempts(attempts);
-
-            const attemptCount = attempts.length;
-            const maxAttempts = quizData.multipleAttempts ? quizData.howManyAttempts : 1;
-
-            if (attemptCount >= maxAttempts) {
-                setCanTakeQuiz(false);
-                if (attempts.length > 0) {
-                    const lastAttempt = attempts[attempts.length - 1];
-                    showAttemptResults(lastAttempt, questionsData);
-                }
+        try {
+            const quizData = await client.findQuizById(String(qid));
+            
+            if (!isFaculty && !quizData.published) {
+                alert("This quiz is not yet published");
+                router.push(`/Courses/${cid}/Quizzes`);
                 return;
             }
+            
+            setQuiz(quizData);
 
-            const newAttempt = await client.startAttempt(String(qid), currentUser._id);
-            setAttempt(newAttempt);
+            const questionsData = await client.findQuestionsForQuiz(String(qid));
+            setQuestions(questionsData);
+            
+            // Pre-fill answers for faculty preview
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const initialAnswers = questionsData.map((q: any) => {
+                if (isFaculty) {
+                    // Pre-fill correct answers for faculty
+                    if (q.type === "MULTIPLE_CHOICE") {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const correctChoice = q.choices?.find((c: any) => c.isCorrect);
+                        return { question: q._id, answer: correctChoice?.text || "" };
+                    } else if (q.type === "TRUE_FALSE") {
+                        return { question: q._id, answer: q.correctAnswer };
+                    } else if (q.type === "FILL_IN_BLANK") {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const correctAnswer = q.choices?.find((c: any) => c.isCorrect);
+                        return { question: q._id, answer: correctAnswer?.text || "" };
+                    }
+                }
+                return { question: q._id, answer: "" };
+            });
+            setAnswers(initialAnswers);
+
+            if (!isFaculty && currentUser?._id) {
+                const attempts = await client.getAttemptsForUser(String(qid), currentUser._id);
+                setUserAttempts(attempts);
+
+                const attemptCount = attempts.length;
+                const maxAttempts = quizData.multipleAttempts ? quizData.howManyAttempts : 1;
+
+                if (attemptCount >= maxAttempts) {
+                    setCanTakeQuiz(false);
+                    if (attempts.length > 0) {
+                        const lastAttempt = attempts[attempts.length - 1];
+                        showAttemptResults(lastAttempt);
+                    }
+                    return;
+                }
+
+                const newAttempt = await client.startAttempt(String(qid), currentUser._id);
+                setAttempt(newAttempt);
+            }
+            
+            setStartTime(new Date());
+        } catch (error) {
+            console.error("Error loading quiz:", error);
+            alert("Error loading quiz. Please try again.");
         }
-        
-        setStartTime(new Date());
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const showAttemptResults = (attemptData: any, questionsData: any[]) => {
+    const showAttemptResults = (attemptData: any) => {
         setAnswers(attemptData.answers || []);
         setScore(attemptData.score || 0);
         setShowResults(true);
