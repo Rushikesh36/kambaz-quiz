@@ -316,6 +316,7 @@ export default function QuizEditor() {
                     questions={questions}
                     editingQuestion={editingQuestion}
                     questionForm={questionForm}
+                    setQuestionForm={setQuestionForm}
                     onNewQuestion={handleNewQuestion}
                     onEditQuestion={handleEditQuestion}
                     onCancelQuestion={handleCancelQuestionEdit}
@@ -333,7 +334,7 @@ export default function QuizEditor() {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function QuestionsTab({ questions, editingQuestion, questionForm, onNewQuestion, onEditQuestion, onCancelQuestion, onSaveQuestion, onDeleteQuestion, setQuestionField, addChoice, removeChoice, updateChoice, setCorrectChoice }: any) {
+function QuestionsTab({ questions, editingQuestion, questionForm, setQuestionForm, onNewQuestion, onEditQuestion, onCancelQuestion, onSaveQuestion, onDeleteQuestion, setQuestionField, addChoice, removeChoice, updateChoice, setCorrectChoice }: any) {
     return (
         <div>
             <div className="d-flex justify-content-between align-items-center mb-3">
@@ -346,7 +347,7 @@ function QuestionsTab({ questions, editingQuestion, questionForm, onNewQuestion,
             {questions.map((question: any) => (
                 <div key={question._id} className="border rounded p-3 mb-3">
                     {editingQuestion === question._id ? (
-                        <QuestionForm form={questionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
+                        <QuestionForm form={questionForm} setForm={setQuestionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
                     ) : (
                         <QuestionPreview question={question} onEdit={() => onEditQuestion(question)} onDelete={() => onDeleteQuestion(question._id)} />
                     )}
@@ -355,7 +356,7 @@ function QuestionsTab({ questions, editingQuestion, questionForm, onNewQuestion,
 
             {editingQuestion && editingQuestion.startsWith("new-") && (
                 <div className="border rounded p-3 mb-3">
-                    <QuestionForm form={questionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
+                    <QuestionForm form={questionForm} setForm={setQuestionForm} set={setQuestionField} addChoice={addChoice} removeChoice={removeChoice} updateChoice={updateChoice} setCorrectChoice={setCorrectChoice} onSave={onSaveQuestion} onCancel={onCancelQuestion} />
                 </div>
             )}
         </div>
@@ -396,21 +397,23 @@ function QuestionPreview({ question, onEdit, onDelete }: any) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function QuestionForm({ form, set, addChoice, removeChoice, updateChoice, setCorrectChoice, onSave, onCancel }: any) {
+function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoice, setCorrectChoice, onSave, onCancel }: any) {
     const handleTypeChange = (newType: string) => {
+        const updates = { ...form, type: newType };
+        
         if (newType === "TRUE_FALSE") {
-            set("type", newType);
-            set("correctAnswer", true);
-            set("choices", null);
+            updates.correctAnswer = true;
+            updates.choices = null;
         } else if (newType === "FILL_IN_BLANK") {
-            set("type", newType);
-            set("choices", [{ text: "", isCorrect: true }]);
-            set("correctAnswer", null);
+            updates.choices = [{ text: "", isCorrect: true }];
+            updates.correctAnswer = null;
         } else {
-            set("type", newType);
-            set("choices", [{ text: "", isCorrect: true }, { text: "", isCorrect: false }]);
-            set("correctAnswer", null);
+            updates.choices = [{ text: "", isCorrect: true }, { text: "", isCorrect: false }];
+            updates.correctAnswer = null;
         }
+        
+        // Use setForm to update all fields at once
+        setForm(updates);
     };
 
     return (
