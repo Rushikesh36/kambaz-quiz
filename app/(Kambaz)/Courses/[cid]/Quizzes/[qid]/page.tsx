@@ -61,14 +61,14 @@ export default function QuizDetails() {
                 <div className="d-flex gap-2">
                     {isFaculty ? (
                         <>
-                            {/* <button
+                            <button
                                 className="btn btn-light border"
                                 onClick={() =>
                                     router.push(`/Courses/${cid}/Quizzes/${qid}/Preview`)
                                 }
                             >
                                 Preview
-                            </button> */}
+                            </button>
                             <button
                                 className="btn btn-light border"
                                 onClick={() =>
