@@ -47,11 +47,15 @@ export default function QuizEditor() {
 
     const loadQuiz = async () => {
         if (!qid) return;
-        const data = await client.findQuizById(String(qid));
-        dispatch(setCurrentQuiz(data));
-        
-        const questionsData = await client.findQuestionsForQuiz(String(qid));
-        dispatch(setQuestions(questionsData));
+        try {
+            const data = await client.findQuizById(String(qid));
+            dispatch(setCurrentQuiz(data));
+            
+            const questionsData = await client.findQuestionsForQuiz(String(qid));
+            dispatch(setQuestions(questionsData));
+        } catch (error: any) {
+            alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
     };
 
     const handleSave = async () => {
@@ -59,10 +63,14 @@ export default function QuizEditor() {
             alert("Please fill in all date fields (Due Date, Available From, and Available Until)");
             return;
         }
-        const updated = await client.updateQuiz(String(qid), form);
-        dispatch(updateInStore(updated));
-        dispatch(setCurrentQuiz(updated));
-        router.push(`/Courses/${cid}/Quizzes/${qid}`);
+        try {
+            const updated = await client.updateQuiz(String(qid), form);
+            dispatch(updateInStore(updated));
+            dispatch(setCurrentQuiz(updated));
+            router.push(`/Courses/${cid}/Quizzes/${qid}`);
+        } catch (error: any) {
+            alert(`Error saving quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
     };
 
     const handleSaveAndPublish = async () => {
@@ -70,12 +78,16 @@ export default function QuizEditor() {
             alert("Please fill in all date fields (Due Date, Available From, and Available Until)");
             return;
         }
-        const updated = await client.updateQuiz(String(qid), {
-            ...form,
-            published: true,
-        });
-        dispatch(updateInStore(updated));
-        router.push(`/Courses/${cid}/Quizzes`);
+        try {
+            const updated = await client.updateQuiz(String(qid), {
+                ...form,
+                published: true,
+            });
+            dispatch(updateInStore(updated));
+            router.push(`/Courses/${cid}/Quizzes`);
+        } catch (error: any) {
+            alert(`Error saving and publishing quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
     };
 
     const handleCancel = () => {
@@ -116,26 +128,34 @@ export default function QuizEditor() {
     };
 
     const handleSaveQuestionEdit = async () => {
-        const { _id, isNew, ...data } = questionForm;
+        try {
+            const { _id, isNew, ...data } = questionForm;
 
-        if (isNew) {
-            await client.createQuestion(String(qid), data);
-        } else {
-            await client.updateQuestion(_id, data);
+            if (isNew) {
+                await client.createQuestion(String(qid), data);
+            } else {
+                await client.updateQuestion(_id, data);
+            }
+            
+            const updated = await client.findQuestionsForQuiz(String(qid));
+            dispatch(setQuestions(updated));
+            setEditingQuestion(null);
+            setQuestionForm({});
+        } catch (error: any) {
+            alert(`Error saving question: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
-        
-        const updated = await client.findQuestionsForQuiz(String(qid));
-        dispatch(setQuestions(updated));
-        setEditingQuestion(null);
-        setQuestionForm({});
     };
 
     const handleDeleteQuestion = async (questionId: string) => {
         const ok = window.confirm("Delete this question?");
         if (!ok) return;
-        await client.deleteQuestion(questionId);
-        const updated = await client.findQuestionsForQuiz(String(qid));
-        dispatch(setQuestions(updated));
+        try {
+            await client.deleteQuestion(questionId);
+            const updated = await client.findQuestionsForQuiz(String(qid));
+            dispatch(setQuestions(updated));
+        } catch (error: any) {
+            alert(`Error deleting question: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -250,7 +270,12 @@ export default function QuizEditor() {
 
                     <div className="mb-3">
                         <label className="form-label">Time Limit (minutes)</label>
-                        <input type="number" className="form-control" value={form.timeLimit || 20} onChange={(e) => set("timeLimit", Number(e.target.value))} />
+                        <input 
+                            type="number" 
+                            className="form-control" 
+                            value={form.timeLimit ?? ""} 
+                            onChange={(e) => set("timeLimit", e.target.value === "" ? null : Number(e.target.value))} 
+                        />
                     </div>
 
                     <div className="mb-3 form-check">
@@ -261,7 +286,12 @@ export default function QuizEditor() {
                     {form.multipleAttempts && (
                         <div className="mb-3 ms-4">
                             <label className="form-label">How Many Attempts</label>
-                            <input type="number" className="form-control" value={form.howManyAttempts || 1} onChange={(e) => set("howManyAttempts", Number(e.target.value))} />
+                            <input 
+                                type="number" 
+                                className="form-control" 
+                                value={form.howManyAttempts ?? ""} 
+                                onChange={(e) => set("howManyAttempts", e.target.value === "" ? null : Number(e.target.value))} 
+                            />
                         </div>
                     )}
 
@@ -434,7 +464,12 @@ function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoic
 
             <div className="mb-3">
                 <label className="form-label">Points</label>
-                <input type="number" className="form-control" value={form.points || 1} onChange={(e) => set("points", Number(e.target.value))} />
+                <input 
+                    type="number" 
+                    className="form-control" 
+                    value={form.points ?? ""} 
+                    onChange={(e) => set("points", e.target.value === "" ? null : Number(e.target.value))} 
+                />
             </div>
 
             <div className="mb-3">
