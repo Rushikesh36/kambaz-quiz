@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rushikesh Wani - Kambaz Next.js App",
+  title: "Quizzes - Kambaz Next.js App",
   description: "Working on Kambaz Next.js App for assignment submission with course code CS5610 at Northeastern University under the guidance of Prof. Jose Annunziato.",
 };
 

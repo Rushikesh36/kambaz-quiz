@@ -5,6 +5,8 @@ export default function Labs() {
         <div id="wd-labs">
             <div id="self-info">
                 <h2>Name: Rushikesh Rajendra Wani</h2>
+                <h2>Name: Chaitanya Sandeep Jumale</h2>
+                <h2>Name: Dhrumil Kotecha</h2>
                 <h3>Section: 04</h3>
                 <h3>Course Code: CS 5610</h3>
                 <h3>
