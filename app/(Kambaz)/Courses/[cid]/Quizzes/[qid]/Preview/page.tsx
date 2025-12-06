@@ -47,10 +47,7 @@ export default function PreviewQuiz() {
             if (remaining <= 0) {
                 // Time expired - show alert and auto-submit after 2 seconds
                 alert("Time's up! Your quiz will be submitted automatically.");
-                setTimeout(() => {
-                    handleSubmit(true); // true = skip confirmation
-                }, 2000);
-                clearInterval(timer);
+                handleSubmit(true);
             } else {
                 setTimeLeft(remaining);
             }
