@@ -45,7 +45,12 @@ export default function PreviewQuiz() {
             const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
             const remaining = quiz.timeLimit * 60 - elapsed;
             if (remaining <= 0) {
-                handleSubmit();
+                // Time expired - show alert and auto-submit after 2 seconds
+                alert("Time's up! Your quiz will be submitted automatically.");
+                setTimeout(() => {
+                    handleSubmit(true); // true = skip confirmation
+                }, 2000);
+                clearInterval(timer);
             } else {
                 setTimeLeft(remaining);
             }
@@ -113,9 +118,8 @@ export default function PreviewQuiz() {
             }
             
             setStartTime(new Date());
-        } catch (error) {
-            console.error("Error loading quiz:", error);
-            alert("Error loading quiz. Please try again.");
+        } catch (error: any) {
+            alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
     };
 
@@ -152,42 +156,48 @@ export default function PreviewQuiz() {
         }
     };
 
-    const handleSubmit = async () => {
-        const ok = window.confirm("Submit quiz?");
-        if (!ok) return;
-
-        let calculatedScore = 0;
-
-        if (isFaculty) {
-            questions.forEach((question, idx) => {
-                const answer = answers[idx];
-                let isCorrect = false;
-
-                if (question.type === "MULTIPLE_CHOICE") {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    const selected = question.choices.find((c: any) => c.text === answer.answer);
-                    isCorrect = selected?.isCorrect || false;
-                } else if (question.type === "TRUE_FALSE") {
-                    isCorrect = answer.answer === question.correctAnswer;
-                } else if (question.type === "FILL_IN_BLANK") {
-                    const answerLower = String(answer.answer).toLowerCase().trim();
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    isCorrect = question.choices.some(
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
-                    );
-                }
-
-                if (isCorrect) calculatedScore += question.points;
-            });
-            setScore(calculatedScore);
-        } else {
-            const result = await client.submitAttempt(attempt._id, answers);
-            setAttempt(result);
-            setScore(result.score);
+    const handleSubmit = async (skipConfirmation = false) => {
+        if (!skipConfirmation) {
+            const ok = window.confirm("Submit quiz?");
+            if (!ok) return;
         }
 
-        setShowResults(true);
+        try {
+            let calculatedScore = 0;
+
+            if (isFaculty) {
+                questions.forEach((question, idx) => {
+                    const answer = answers[idx];
+                    let isCorrect = false;
+
+                    if (question.type === "MULTIPLE_CHOICE") {
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const selected = question.choices.find((c: any) => c.text === answer.answer);
+                        isCorrect = selected?.isCorrect || false;
+                    } else if (question.type === "TRUE_FALSE") {
+                        isCorrect = answer.answer === question.correctAnswer;
+                    } else if (question.type === "FILL_IN_BLANK") {
+                        const answerLower = String(answer.answer).toLowerCase().trim();
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        isCorrect = question.choices.some(
+                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                            (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
+                        );
+                    }
+
+                    if (isCorrect) calculatedScore += question.points;
+                });
+                setScore(calculatedScore);
+            } else {
+                const result = await client.submitAttempt(attempt._id, answers);
+                setAttempt(result);
+                setScore(result.score);
+            }
+
+            setShowResults(true);
+        } catch (error: any) {
+            alert(`Error submitting quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -436,7 +446,7 @@ export default function PreviewQuiz() {
                                 Previous
                             </button>
                             {currentQuestionIndex === questions.length - 1 ? (
-                                <button className="btn btn-success" onClick={handleSubmit}>
+                                <button className="btn btn-success" onClick={() => handleSubmit(false)}>
                                     Submit {isFaculty ? "Preview" : "Quiz"}
                                 </button>
                             ) : (
