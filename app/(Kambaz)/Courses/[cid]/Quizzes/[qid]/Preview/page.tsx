@@ -21,13 +21,13 @@ export default function PreviewQuiz() {
     const [answers, setAnswers] = useState<any[]>([]);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
+    const [startTime, setStartTime] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [attempt, setAttempt] = useState<any>(null);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [userAttempts, setUserAttempts] = useState<any[]>([]);
     const [canTakeQuiz, setCanTakeQuiz] = useState(true);
-    const [timeExpired, setTimeExpired] = useState(false);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
@@ -35,22 +35,34 @@ export default function PreviewQuiz() {
     const isFaculty = currentUser?.role?.toLowerCase() === "faculty";
 
     useEffect(() => {
+        // Redirect to quiz landing page on reload/refresh
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (!showResults && !isFaculty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    }, [showResults, isFaculty]);
+
+    useEffect(() => {
         loadQuizAndCheckAttempts();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [qid]);
 
     useEffect(() => {
-        if (!quiz || !attempt || isFaculty || timeExpired) return;
-        
+        if (!quiz || !startTime || isFaculty) return;
         const timer = setInterval(() => {
-            const startTime = new Date(attempt.startedAt).getTime();
-            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
             const remaining = quiz.timeLimit * 60 - elapsed;
-            
             if (remaining <= 0) {
-                setTimeExpired(true);
                 clearInterval(timer);
-                // Time expired - show alert and auto-submit
+                // Time expired - show alert and auto-submit after 2 seconds
                 alert("Time's up! Your quiz will be submitted automatically.");
                 setTimeout(() => {
                     handleSubmit(true);
@@ -59,10 +71,9 @@ export default function PreviewQuiz() {
                 setTimeLeft(remaining);
             }
         }, 1000);
-        
         return () => clearInterval(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quiz, attempt, timeExpired]);
+    }, [quiz, startTime]);
 
     const loadQuizAndCheckAttempts = async () => {
         if (!qid) return;
@@ -100,6 +111,7 @@ export default function PreviewQuiz() {
                 }
                 return { question: q._id, answer: "" };
             });
+            setAnswers(initialAnswers);
 
             if (!isFaculty && currentUser?._id) {
                 const attempts = await client.getAttemptsForUser(String(qid), currentUser._id);
@@ -117,53 +129,11 @@ export default function PreviewQuiz() {
                     return;
                 }
 
-                // Check if there's an in-progress attempt
-                const inProgressAttempt = attempts.find((att: any) => !att.submittedAt);
-                
-                let currentAttempt;
-                if (inProgressAttempt) {
-                    // Resume existing attempt
-                    currentAttempt = inProgressAttempt;
-                    
-                    // Check if time has already expired
-                    const startTime = new Date(inProgressAttempt.startedAt).getTime();
-                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-                    const remaining = quizData.timeLimit * 60 - elapsed;
-                    
-                    if (remaining <= 0) {
-                        // Time already expired, auto-submit
-                        setTimeExpired(true);
-                        alert("Time's up! Your quiz will be submitted automatically.");
-                        setTimeout(async () => {
-                            try {
-                                const result = await client.submitAttempt(inProgressAttempt._id, inProgressAttempt.answers || initialAnswers);
-                                setAttempt(result);
-                                setScore(result.score);
-                                setAnswers(result.answers || initialAnswers);
-                                setShowResults(true);
-                            } catch (error: any) {
-                                alert(`Error submitting quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
-                            }
-                        }, 2000);
-                        return;
-                    }
-                    
-                    // Load saved answers
-                    if (inProgressAttempt.answers && inProgressAttempt.answers.length > 0) {
-                        setAnswers(inProgressAttempt.answers);
-                    } else {
-                        setAnswers(initialAnswers);
-                    }
-                } else {
-                    // Start new attempt
-                    currentAttempt = await client.startAttempt(String(qid), currentUser._id);
-                    setAnswers(initialAnswers);
-                }
-                
-                setAttempt(currentAttempt);
-            } else {
-                setAnswers(initialAnswers);
+                const newAttempt = await client.startAttempt(String(qid), currentUser._id);
+                setAttempt(newAttempt);
             }
+            
+            setStartTime(new Date());
         } catch (error: any) {
             alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -351,7 +321,7 @@ export default function PreviewQuiz() {
                 <div className="alert alert-info mt-3">
                     <h5>Score: {score} out of {quiz.points}</h5>
                     {isFaculty && <p>This is a preview. Results are not saved.</p>}
-                    {!isFaculty && userAttempts.length >= 0 && (
+                    {!isFaculty && userAttempts.length > 0 && (
                         <p>Attempt {userAttempts.length + 1} of {quiz.multipleAttempts ? quiz.howManyAttempts : 1}</p>
                     )}
                 </div>
@@ -364,12 +334,12 @@ export default function PreviewQuiz() {
 
                         if (question.type === "MULTIPLE_CHOICE") {
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const selected = question.choices.find((c: any) => c.text === answer?.answer);
+                            const selected = question.choices.find((c: any) => c.text === answer.answer);
                             isCorrect = selected?.isCorrect || false;
                         } else if (question.type === "TRUE_FALSE") {
-                            isCorrect = answer?.answer === question.correctAnswer;
+                            isCorrect = answer.answer === question.correctAnswer;
                         } else if (question.type === "FILL_IN_BLANK") {
-                            const answerLower = String(answer?.answer || "").toLowerCase().trim();
+                            const answerLower = String(answer.answer).toLowerCase().trim();
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             isCorrect = question.choices.some(
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -435,7 +405,7 @@ export default function PreviewQuiz() {
             )}
 
             <h4>{quiz.title}</h4>
-            {attempt && !isFaculty && (
+            {startTime && !isFaculty && (
                 <div className="mb-3">
                     <strong>Time Remaining:</strong>{" "}
                     <span className={timeLeft < 300 ? "text-danger" : ""}>{formatTime(timeLeft)}</span>
@@ -504,7 +474,7 @@ export default function PreviewQuiz() {
                     {!isFaculty && (
                         <div className="text-center mt-3">
                             <small className="text-muted">
-                                Answers auto-saved
+                                Quiz saved at {new Date().toLocaleTimeString()}
                             </small>
                         </div>
                     )}
@@ -521,7 +491,7 @@ export default function PreviewQuiz() {
                                     className={`btn btn-sm ${
                                         idx === currentQuestionIndex
                                             ? "btn-primary"
-                                            : answers[idx]?.answer !== "" && answers[idx]?.answer !== null && answers[idx]?.answer !== undefined
+                                            : answers[idx]?.answer
                                             ? "btn-success"
                                             : "btn-outline-secondary"
                                     }`}
