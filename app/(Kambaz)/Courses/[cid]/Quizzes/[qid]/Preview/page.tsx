@@ -35,20 +35,29 @@ export default function PreviewQuiz() {
     const isFaculty = currentUser?.role?.toLowerCase() === "faculty";
 
     useEffect(() => {
-        // Redirect to quiz landing page on reload/refresh
-        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-            if (!showResults && !isFaculty) {
-                e.preventDefault();
-                e.returnValue = '';
+        // Detect page reload and redirect to quizzes list
+        const sessionKey = `quiz_active_${qid}`;
+        
+        if (!isFaculty && !showResults) {
+            // Check if this page was already loaded in this session
+            const wasLoaded = sessionStorage.getItem(sessionKey);
+            
+            if (wasLoaded) {
+                // This is a reload - redirect to quizzes list
+                sessionStorage.removeItem(sessionKey);
+                router.push(`/Courses/${cid}/Quizzes`);
+                return;
             }
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, [showResults, isFaculty]);
+            
+            // Mark this page as loaded
+            sessionStorage.setItem(sessionKey, 'true');
+            
+            // Clean up when component unmounts (natural navigation away)
+            return () => {
+                sessionStorage.removeItem(sessionKey);
+            };
+        }
+    }, [cid, qid, isFaculty, showResults, router]);
 
     useEffect(() => {
         loadQuizAndCheckAttempts();
