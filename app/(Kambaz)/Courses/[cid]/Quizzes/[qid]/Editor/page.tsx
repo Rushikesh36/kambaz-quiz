@@ -273,6 +273,11 @@ export default function QuizEditor() {
                         <label className="form-check-label" htmlFor="shuffleAnswers">Shuffle Answers</label>
                     </div>
 
+                    <div className="mb-3 form-check">
+                        <input type="checkbox" className="form-check-input" id="shuffleQuestions" checked={form.shuffleQuestions || false} onChange={(e) => set("shuffleQuestions", e.target.checked)} />
+                        <label className="form-check-label" htmlFor="shuffleQuestions">Shuffle Questions</label>
+                    </div>
+
                     <div className="mb-3">
                         <label className="form-label">Time Limit (minutes)</label>
                         <input 

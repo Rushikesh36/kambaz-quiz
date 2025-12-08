@@ -5,6 +5,16 @@ import { useParams, useRouter } from "next/navigation";
 import { useSelector } from "react-redux";
 import * as client from "../../client";
 
+// Fisher-Yates shuffle algorithm
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 export default function PreviewQuiz() {
     const params = useParams() as { cid?: string; qid?: string };
     const cid = params.cid ? decodeURIComponent(String(params.cid)) : "";
@@ -109,7 +119,24 @@ export default function PreviewQuiz() {
             
             setQuiz(quizData);
 
-            const questionsData = await client.findQuestionsForQuiz(String(qid));
+            let questionsData = await client.findQuestionsForQuiz(String(qid));
+            
+            // Shuffle questions if enabled (for students only)
+            if (!isFaculty && quizData.shuffleQuestions) {
+                questionsData = shuffleArray(questionsData);
+            }
+            
+            // Shuffle answers for each question if enabled (for students only)
+            if (!isFaculty && quizData.shuffleAnswers) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                questionsData = questionsData.map((q: any) => {
+                    if (q.choices && q.choices.length > 0) {
+                        return { ...q, choices: shuffleArray(q.choices) };
+                    }
+                    return q;
+                });
+            }
+            
             setQuestions(questionsData);
             
             // Pre-fill answers for faculty preview
