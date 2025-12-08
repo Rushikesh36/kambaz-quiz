@@ -109,7 +109,35 @@ export default function Quizzes() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedQuizzes = [...quizzes].sort((a: any, b: any) => {
-        // Sort by DUE DATE (not available date) - newest first
+        // Get availability status for each quiz
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const getStatus = (quiz: any) => {
+            const now = new Date();
+            const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
+            const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
+
+            if (!availableDate) return "Available";
+            if (now < availableDate) return "Not available";
+            if (untilDate && now > untilDate) return "Closed";
+            return "Available";
+        };
+
+        const statusA = getStatus(a);
+        const statusB = getStatus(b);
+
+        // Define status priority: Available > Not available > Closed
+        const statusPriority: { [key: string]: number } = {
+            "Available": 1,
+            "Not available": 2,
+            "Closed": 3
+        };
+
+        // First, sort by status
+        if (statusPriority[statusA] !== statusPriority[statusB]) {
+            return statusPriority[statusA] - statusPriority[statusB];
+        }
+
+        // Within same status, sort by due date (newest first)
         const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         return dateB - dateA; // Descending order (newest due date first)
