@@ -6,6 +6,24 @@ import { useDispatch, useSelector } from "react-redux";
 import * as client from "../../client";
 import { setCurrentQuiz, updateQuiz as updateInStore, setQuestions } from "../../reducer";
 
+// Helper function to format date for datetime-local input
+function formatDateForInput(dateString: string | undefined | null): string {
+    if (!dateString) return "";
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "";
+        // Format as YYYY-MM-DDTHH:mm for datetime-local input
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    } catch {
+        return "";
+    }
+}
+
 export default function QuizEditor() {
     const params = useParams() as { cid?: string; qid?: string };
     const cid = params.cid ? decodeURIComponent(String(params.cid)) : "";
@@ -332,17 +350,35 @@ export default function QuizEditor() {
 
                     <div className="mb-3">
                         <label className="form-label">Due Date <span className="text-danger">*</span></label>
-                        <input type="datetime-local" className="form-control" value={form.dueDate || ""} onChange={(e) => set("dueDate", e.target.value)} required />
+                        <input 
+                            type="datetime-local" 
+                            className="form-control" 
+                            value={formatDateForInput(form.dueDate)} 
+                            onChange={(e) => set("dueDate", e.target.value)} 
+                            required 
+                        />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Available From <span className="text-danger">*</span></label>
-                        <input type="datetime-local" className="form-control" value={form.availableDate || ""} onChange={(e) => set("availableDate", e.target.value)} required />
+                        <input 
+                            type="datetime-local" 
+                            className="form-control" 
+                            value={formatDateForInput(form.availableDate)} 
+                            onChange={(e) => set("availableDate", e.target.value)} 
+                            required 
+                        />
                     </div>
 
                     <div className="mb-3">
                         <label className="form-label">Available Until <span className="text-danger">*</span></label>
-                        <input type="datetime-local" className="form-control" value={form.untilDate || ""} onChange={(e) => set("untilDate", e.target.value)} required />
+                        <input 
+                            type="datetime-local" 
+                            className="form-control" 
+                            value={formatDateForInput(form.untilDate)} 
+                            onChange={(e) => set("untilDate", e.target.value)} 
+                            required 
+                        />
                     </div>
 
                     <div className="d-flex justify-content-end gap-2 mt-4">
