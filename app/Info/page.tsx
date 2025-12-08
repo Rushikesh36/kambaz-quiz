@@ -1,6 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
-export default function Labs() {
+export default function Info() {
     return (
         <div id="wd-labs">
             <div id="self-info">
