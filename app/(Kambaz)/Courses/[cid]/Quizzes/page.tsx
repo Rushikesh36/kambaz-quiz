@@ -109,10 +109,10 @@ export default function Quizzes() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sortedQuizzes = [...quizzes].sort((a: any, b: any) => {
-        // Handle empty/invalid dates by putting them at the end
-        const dateA = a.availableDate ? new Date(a.availableDate).getTime() : Number.MAX_SAFE_INTEGER;
-        const dateB = b.availableDate ? new Date(b.availableDate).getTime() : Number.MAX_SAFE_INTEGER;
-        return dateB - dateA; // Descending order (newest first)
+        // Sort by DUE DATE (not available date) - newest first
+        const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+        const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
+        return dateB - dateA; // Descending order (newest due date first)
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -1,231 +1,209 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSelector, useDispatch } from "react-redux";
-import { FaCheckCircle, FaBan } from "react-icons/fa";
-import { BsGripVertical, BsThreeDotsVertical } from "react-icons/bs";
 import * as client from "../client";
-import { setQuizzes, deleteQuiz as deleteFromStore, updateQuiz } from "../reducer";
+import { setCurrentQuiz, updateQuiz } from "../reducer";
 
-export default function Quizzes() {
-    const params = useParams() as { cid?: string };
+export default function QuizDetails() {
+    const params = useParams() as { cid?: string; qid?: string };
     const cid = params.cid ? decodeURIComponent(String(params.cid)) : "";
-    
+    const qid = params.qid ? decodeURIComponent(String(params.qid)) : "";
+
     const router = useRouter();
     const dispatch = useDispatch();
-    const [contextMenuQuiz, setContextMenuQuiz] = useState<string | null>(null);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const quizzes = (state.quizzesReducer?.quizzes || []) as any[];
+    const quiz = state.quizzesReducer?.currentQuiz;
     const currentUser = state.accountReducer?.currentUser;
 
     const isFaculty = currentUser?.role?.toLowerCase() === "faculty";
 
     useEffect(() => {
-        loadQuizzes();
+        loadQuiz();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [cid]);
+    }, [qid]);
 
-    const loadQuizzes = async () => {
-        if (!cid) return;
-        const data = await client.findQuizzesForCourse(String(cid));
-        dispatch(setQuizzes(data));
+    const loadQuiz = async () => {
+        if (!qid) return;
+        const data = await client.findQuizById(String(qid));
+        
+        if (!isFaculty && !data.published) {
+            alert("This quiz is not yet published");
+            router.push(`/Courses/${cid}/Quizzes`);
+            return;
+        }
+        
+        dispatch(setCurrentQuiz(data));
     };
 
-    const handleAddQuiz = async () => {
-        if (!isFaculty) return;
-        const newQuiz = {
-            title: "Unnamed Quiz",
-            description: "",
-            course: String(cid),
-            quizType: "GRADED_QUIZ" as const,
-            points: 0,
-            assignmentGroup: "QUIZZES" as const,
-            shuffleAnswers: true,
-            timeLimit: 20,
-            multipleAttempts: false,
-            howManyAttempts: 1,
-            showCorrectAnswers: "IMMEDIATELY",
-            accessCode: "",
-            oneQuestionAtATime: true,
-            webcamRequired: false,
-            lockQuestionsAfterAnswering: false,
-            dueDate: "",
-            availableDate: "",
-            untilDate: "",
-            published: false,
-        };
-        const created = await client.createQuiz(String(cid), newQuiz);
-        dispatch(setQuizzes([...quizzes, created]));
-        router.push(`/Courses/${cid}/Quizzes/${created._id}`);
-    };
-
-    const handleDelete = async (quizId: string) => {
-        if (!isFaculty) return;
-        const ok = window.confirm("Are you sure you want to delete this quiz?");
-        if (!ok) return;
-        await client.deleteQuiz(quizId);
-        dispatch(deleteFromStore(quizId));
-        setContextMenuQuiz(null);
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handlePublishToggle = async (quiz: any) => {
-        if (!isFaculty) return;
+    const handlePublishToggle = async () => {
+        if (!quiz || !isFaculty) return;
         const updated = await client.publishQuiz(quiz._id, !quiz.published);
         dispatch(updateQuiz(updated));
-        setContextMenuQuiz(null);
+        dispatch(setCurrentQuiz(updated));
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getAvailabilityStatus = (quiz: any) => {
-        const now = new Date();
-        const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
-        const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
-
-        if (!availableDate) return "Available";
-        if (now < availableDate) {
-            return `Not available until ${availableDate.toLocaleDateString()}`;
+    const handleTakeQuiz = () => {
+        // Check if quiz is past due date
+        if (quiz.dueDate) {
+            const now = new Date();
+            const dueDate = new Date(quiz.dueDate);
+            if (now > dueDate) {
+                alert("This quiz is past its due date and can no longer be taken");
+                return;
+            }
         }
-        if (untilDate && now > untilDate) {
-            return "Closed";
-        }
-        return "Available";
+        router.push(`/Courses/${cid}/Quizzes/${qid}/Preview`);
     };
 
-    const formatDate = (dateStr: string) => {
-        if (!dateStr) return "—";
-        const d = new Date(dateStr);
-        return d.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            hour: "numeric",
-            minute: "2-digit",
-        });
-    };
+    if (!quiz) {
+        return <div className="p-3">Loading...</div>;
+    }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sortedQuizzes = [...quizzes].sort((a: any, b: any) => {
-        // Handle empty/invalid dates by putting them at the end
-        const dateA = a.availableDate ? new Date(a.availableDate).getTime() : Number.MAX_SAFE_INTEGER;
-        const dateB = b.availableDate ? new Date(b.availableDate).getTime() : Number.MAX_SAFE_INTEGER;
-        return dateB - dateA; // Descending order (newest first)
-    });
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const courseQuizzes = sortedQuizzes.filter((q: any) => {
-        const matchesCourse = String(q.course) === String(cid);
-        if (!matchesCourse) return false;
-        
-        if (!isFaculty && !q.published) return false;
-        
-        return true;
-    });
+    // Check if quiz is past due
+    const isPastDue = quiz.dueDate ? new Date() > new Date(quiz.dueDate) : false;
 
     return (
-        <div className="p-3">
-            {isFaculty && (
-                <div className="d-flex justify-content-end mb-3">
-                    <button className="btn btn-danger" onClick={handleAddQuiz}>
-                        + Quiz
-                    </button>
-                </div>
-            )}
-
-            {courseQuizzes.length === 0 ? (
-                <div className="alert alert-info">
-                    {isFaculty
-                        ? "No quizzes yet. Click '+ Quiz' to create one."
-                        : "No quizzes available for this course."}
-                </div>
-            ) : (
-                <ul className="list-group">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {courseQuizzes.map((quiz: any) => (
-                        <li key={quiz._id} className="list-group-item">
-                            <div className="d-flex align-items-start">
-                                <span className="me-2">
-                                    <BsGripVertical className="fs-4" />
-                                </span>
-
-                                <div className="flex-grow-1">
-                                    <div className="d-flex align-items-center gap-2">
-                                        {quiz.published ? (
-                                            <FaCheckCircle className="text-success" />
-                                        ) : (
-                                            <FaBan className="text-danger" />
-                                        )}
-                                        <span
-                                            className="fw-bold text-primary"
-                                            style={{ cursor: "pointer" }}
-                                            onClick={() =>
-                                                router.push(`/Courses/${cid}/Quizzes/${quiz._id}`)
-                                            }
-                                        >
-                                            {quiz.title}
-                                        </span>
-                                    </div>
-
-                                    <div className="small text-muted mt-1">
-                                        <div>{getAvailabilityStatus(quiz)}</div>
-                                        <div>
-                                            <strong>Due:</strong> {formatDate(quiz.dueDate)} |{" "}
-                                            <strong>Points:</strong> {quiz.points} |{" "}
-                                            <strong>Questions:</strong> {quiz.questionCount || 0}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {isFaculty && (
-                                    <div className="position-relative">
-                                        <button
-                                            className="btn btn-link p-0"
-                                            onClick={() =>
-                                                setContextMenuQuiz(
-                                                    contextMenuQuiz === quiz._id ? null : quiz._id
-                                                )
-                                            }
-                                        >
-                                            <BsThreeDotsVertical />
-                                        </button>
-
-                                        {contextMenuQuiz === quiz._id && (
-                                            <div
-                                                className="position-absolute end-0 mt-1 bg-white border rounded shadow-sm"
-                                                style={{ zIndex: 1000, minWidth: "150px" }}
-                                            >
-                                                <button
-                                                    className="dropdown-item"
-                                                    onClick={() => {
-                                                        router.push(`/Courses/${cid}/Quizzes/${quiz._id}/Editor`);
-                                                        setContextMenuQuiz(null);
-                                                    }}
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    className="dropdown-item"
-                                                    onClick={() => handlePublishToggle(quiz)}
-                                                >
-                                                    {quiz.published ? "Unpublish" : "Publish"}
-                                                </button>
-                                                <button
-                                                    className="dropdown-item text-danger"
-                                                    onClick={() => handleDelete(quiz._id)}
-                                                >
-                                                    Delete
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
+        <div className="p-3" style={{ maxWidth: 800 }}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+                <h2>{quiz.title}</h2>
+                <div className="d-flex gap-2">
+                    {isFaculty ? (
+                        <>
+                            <button
+                                className="btn btn-light border"
+                                onClick={() =>
+                                    router.push(`/Courses/${cid}/Quizzes/${qid}/Preview`)
+                                }
+                            >
+                                Preview
+                            </button>
+                            <button
+                                className="btn btn-light border"
+                                onClick={() =>
+                                    router.push(`/Courses/${cid}/Quizzes/${qid}/Editor`)
+                                }
+                            >
+                                Edit
+                            </button>
+                            <button
+                                className={`btn ${
+                                    quiz.published ? "btn-warning" : "btn-success"
+                                }`}
+                                onClick={handlePublishToggle}
+                            >
+                                {quiz.published ? "Unpublish" : "Publish"}
+                            </button>
+                        </>
+                    ) : quiz.published ? (
+                        isPastDue ? (
+                            <div className="alert alert-danger mb-0">
+                                This quiz is past its due date
                             </div>
-                        </li>
-                    ))}
-                </ul>
+                        ) : (
+                            <button className="btn btn-danger" onClick={handleTakeQuiz}>
+                                Take the Quiz
+                            </button>
+                        )
+                    ) : (
+                        <div className="alert alert-warning">
+                            This quiz is not yet published
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="border rounded p-3">
+                <table className="table table-borderless">
+                    <tbody>
+                        <tr>
+                            <td className="fw-bold">Quiz Type</td>
+                            <td>{quiz.quizType?.replace(/_/g, " ")}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Points</td>
+                            <td>{quiz.points}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Assignment Group</td>
+                            <td>{quiz.assignmentGroup}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Shuffle Answers</td>
+                            <td>{quiz.shuffleAnswers ? "Yes" : "No"}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Time Limit</td>
+                            <td>{quiz.timeLimit} Minutes</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Multiple Attempts</td>
+                            <td>{quiz.multipleAttempts ? "Yes" : "No"}</td>
+                        </tr>
+                        {quiz.multipleAttempts && (
+                            <tr>
+                                <td className="fw-bold">How Many Attempts</td>
+                                <td>{quiz.howManyAttempts}</td>
+                            </tr>
+                        )}
+                        <tr>
+                            <td className="fw-bold">Show Correct Answers</td>
+                            <td>{quiz.showCorrectAnswers}</td>
+                        </tr>
+                        {quiz.accessCode && (
+                            <tr>
+                                <td className="fw-bold">Access Code</td>
+                                <td>{quiz.accessCode}</td>
+                            </tr>
+                        )}
+                        <tr>
+                            <td className="fw-bold">One Question at a Time</td>
+                            <td>{quiz.oneQuestionAtATime ? "Yes" : "No"}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Webcam Required</td>
+                            <td>{quiz.webcamRequired ? "Yes" : "No"}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Lock Questions After Answering</td>
+                            <td>{quiz.lockQuestionsAfterAnswering ? "Yes" : "No"}</td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Due Date</td>
+                            <td>
+                                {quiz.dueDate
+                                    ? new Date(quiz.dueDate).toLocaleString()
+                                    : "—"}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Available Date</td>
+                            <td>
+                                {quiz.availableDate
+                                    ? new Date(quiz.availableDate).toLocaleString()
+                                    : "—"}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td className="fw-bold">Until Date</td>
+                            <td>
+                                {quiz.untilDate
+                                    ? new Date(quiz.untilDate).toLocaleString()
+                                    : "—"}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            {quiz.description && (
+                <div className="mt-3">
+                    <h5>Instructions</h5>
+                    <div dangerouslySetInnerHTML={{ __html: quiz.description }} />
+                </div>
             )}
         </div>
     );

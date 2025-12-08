@@ -53,7 +53,7 @@ export default function QuizEditor() {
             
             const questionsData = await client.findQuestionsForQuiz(String(qid));
             dispatch(setQuestions(questionsData));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -69,7 +69,7 @@ export default function QuizEditor() {
             dispatch(updateInStore(updated));
             dispatch(setCurrentQuiz(updated));
             router.push(`/Courses/${cid}/Quizzes/${qid}`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error saving quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -87,7 +87,7 @@ export default function QuizEditor() {
             });
             dispatch(updateInStore(updated));
             router.push(`/Courses/${cid}/Quizzes`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error saving and publishing quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -144,7 +144,7 @@ export default function QuizEditor() {
             dispatch(setQuestions(updated));
             setEditingQuestion(null);
             setQuestionForm({});
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error saving question: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -157,7 +157,7 @@ export default function QuizEditor() {
             await client.deleteQuestion(questionId);
             const updated = await client.findQuestionsForQuiz(String(qid));
             dispatch(setQuestions(updated));
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error deleting question: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }

@@ -154,7 +154,7 @@ export default function PreviewQuiz() {
             }
             
             setStartTime(new Date());
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -232,7 +232,7 @@ export default function PreviewQuiz() {
             }
 
             setShowResults(true);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error submitting quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
