@@ -96,6 +96,17 @@ export default function PreviewQuiz() {
                 return;
             }
             
+            // Check if quiz is past due date (students only)
+            if (!isFaculty && quizData.dueDate) {
+                const now = new Date();
+                const dueDate = new Date(quizData.dueDate);
+                if (now > dueDate) {
+                    alert("This quiz is past its due date and can no longer be accessed");
+                    router.push(`/Courses/${cid}/Quizzes`);
+                    return;
+                }
+            }
+            
             setQuiz(quizData);
 
             const questionsData = await client.findQuestionsForQuiz(String(qid));
@@ -143,6 +154,7 @@ export default function PreviewQuiz() {
             }
             
             setStartTime(new Date());
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
@@ -220,6 +232,7 @@ export default function PreviewQuiz() {
             }
 
             setShowResults(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error submitting quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
         }
