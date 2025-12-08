@@ -137,10 +137,10 @@ export default function Quizzes() {
             return statusPriority[statusA] - statusPriority[statusB];
         }
 
-        // Within same status, sort by due date (newest first)
+        // Within same status, sort by due date (soonest first)
         const dateA = a.dueDate ? new Date(a.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
         const dateB = b.dueDate ? new Date(b.dueDate).getTime() : Number.MAX_SAFE_INTEGER;
-        return dateB - dateA; // Descending order (newest due date first)
+        return dateA - dateB; // Ascending order (soonest due date first)
     });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
