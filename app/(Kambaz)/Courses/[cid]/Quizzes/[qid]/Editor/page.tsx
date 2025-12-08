@@ -132,6 +132,7 @@ export default function QuizEditor() {
                 { text: "", isCorrect: true },
                 { text: "", isCorrect: false },
             ],
+            blanks: null,
             isNew: true,
         });
         setEditingQuestion("new-" + Date.now());
@@ -481,7 +482,8 @@ function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoic
             updates.correctAnswer = true;
             updates.choices = null;
         } else if (newType === "FILL_IN_BLANK") {
-            updates.choices = [{ text: "", isCorrect: true }];
+            updates.blanks = [{ label: "Blank 1", correctAnswers: [""] }];
+            updates.choices = null;
             updates.correctAnswer = null;
         } else {
             updates.choices = [{ text: "", isCorrect: true }, { text: "", isCorrect: false }];
@@ -565,36 +567,72 @@ function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoic
             {form.type === "FILL_IN_BLANK" && (
                 <div className="mb-3">
                     <div className="alert alert-info">
-                        <strong>Instructions:</strong> In the Question field above, type your question with underscores (______) to show where the blank goes.
+                        <strong>Instructions:</strong> In the Question field above, use <code>[blank1]</code>, <code>[blank2]</code>, etc. to mark where blanks go.
                         <br />
-                        Example: &quot;The capital of France is ______&quot;
+                        Example: &quot;The capital of [blank1] is [blank2]&quot;
                     </div>
-                    <label className="form-label">Correct Answer(s)</label>
-                    <small className="form-text text-muted d-block mb-2">
-                        Enter the correct answer(s) that students should type. Answers are case-insensitive.
-                    </small>
+                    <label className="form-label">Blanks and Correct Answers</label>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {(form.choices || []).map((choice: any, idx: number) => (
-                        <div key={idx} className="d-flex gap-2 mb-2">
-                            <input 
-                                type="text" 
-                                className="form-control" 
-                                placeholder={idx === 0 ? "Enter the correct answer (e.g., Paris)" : "Enter alternative answer (optional, e.g., paris)"} 
-                                value={choice.text} 
-                                onChange={(e) => updateChoice(idx, "text", e.target.value)} 
-                            />
-                            {(form.choices || []).length > 1 && (
-                                <button type="button" className="btn btn-sm btn-danger" onClick={(e) => {
+                    {(form.blanks || []).map((blank: any, blankIdx: number) => (
+                        <div key={blankIdx} className="card mb-3">
+                            <div className="card-body">
+                                <div className="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 className="mb-0">{blank.label}</h6>
+                                    {(form.blanks || []).length > 1 && (
+                                        <button type="button" className="btn btn-sm btn-danger" onClick={(e) => {
+                                            e.preventDefault();
+                                            const blanks = [...(form.blanks || [])];
+                                            blanks.splice(blankIdx, 1);
+                                            // Renumber remaining blanks
+                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                            blanks.forEach((b: any, i: number) => {
+                                                b.label = `Blank ${i + 1}`;
+                                            });
+                                            set("blanks", blanks);
+                                        }}>Remove Blank</button>
+                                    )}
+                                </div>
+                                <small className="text-muted d-block mb-2">
+                                    Enter correct answer(s). Students can match any of these (case-insensitive).
+                                </small>
+                                {(blank.correctAnswers || []).map((answer: string, ansIdx: number) => (
+                                    <div key={ansIdx} className="d-flex gap-2 mb-2">
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            placeholder={ansIdx === 0 ? "Enter correct answer" : "Enter alternative answer (optional)"} 
+                                            value={answer} 
+                                            onChange={(e) => {
+                                                const blanks = [...(form.blanks || [])];
+                                                blanks[blankIdx].correctAnswers[ansIdx] = e.target.value;
+                                                set("blanks", blanks);
+                                            }} 
+                                        />
+                                        {(blank.correctAnswers || []).length > 1 && (
+                                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={(e) => {
+                                                e.preventDefault();
+                                                const blanks = [...(form.blanks || [])];
+                                                blanks[blankIdx].correctAnswers.splice(ansIdx, 1);
+                                                set("blanks", blanks);
+                                            }}>×</button>
+                                        )}
+                                    </div>
+                                ))}
+                                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={(e) => {
                                     e.preventDefault();
-                                    removeChoice(idx);
-                                }}>Remove</button>
-                            )}
+                                    const blanks = [...(form.blanks || [])];
+                                    blanks[blankIdx].correctAnswers.push("");
+                                    set("blanks", blanks);
+                                }}>+ Add Alternative Answer</button>
+                            </div>
                         </div>
                     ))}
-                    <button type="button" className="btn btn-sm btn-light" onClick={(e) => {
+                    <button type="button" className="btn btn-sm btn-primary" onClick={(e) => {
                         e.preventDefault();
-                        addChoice();
-                    }}>+ Add Alternative Answer</button>
+                        const blanks = [...(form.blanks || [])];
+                        blanks.push({ label: `Blank ${blanks.length + 1}`, correctAnswers: [""] });
+                        set("blanks", blanks);
+                    }}>+ Add Another Blank</button>
                 </div>
             )}
 

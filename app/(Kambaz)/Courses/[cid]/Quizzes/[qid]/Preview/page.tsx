@@ -152,8 +152,8 @@ export default function PreviewQuiz() {
                         return { question: q._id, answer: q.correctAnswer };
                     } else if (q.type === "FILL_IN_BLANK") {
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const correctAnswer = q.choices?.find((c: any) => c.isCorrect);
-                        return { question: q._id, answer: correctAnswer?.text || "" };
+                        const answers = (q.blanks || []).map((blank: any) => blank.correctAnswers[0] || "");
+                        return { question: q._id, answer: answers };
                     }
                 }
                 return { question: q._id, answer: "" };
@@ -241,12 +241,15 @@ export default function PreviewQuiz() {
                     } else if (question.type === "TRUE_FALSE") {
                         isCorrect = answer.answer === question.correctAnswer;
                     } else if (question.type === "FILL_IN_BLANK") {
-                        const answerLower = String(answer.answer).toLowerCase().trim();
+                        const userAnswers = Array.isArray(answer.answer) ? answer.answer : [answer.answer];
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        isCorrect = question.choices.some(
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
-                        );
+                        isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
+                            const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
+                            return blank.correctAnswers.some(
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
+                            );
+                        });
                     }
 
                     if (isCorrect) calculatedScore += question.points;
@@ -325,12 +328,15 @@ export default function PreviewQuiz() {
                             } else if (question.type === "TRUE_FALSE") {
                                 isCorrect = answer?.answer === question.correctAnswer;
                             } else if (question.type === "FILL_IN_BLANK") {
-                                const answerLower = String(answer?.answer || "").toLowerCase().trim();
+                                const userAnswers = Array.isArray(answer?.answer) ? answer.answer : [answer?.answer];
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                isCorrect = question.choices.some(
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
-                                );
+                                isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
+                                    const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
+                                    return blank.correctAnswers.some(
+                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                        (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
+                                    );
+                                });
                             }
 
                             return (
@@ -343,7 +349,8 @@ export default function PreviewQuiz() {
                                         <span>{question.points} pts</span>
                                     </div>
                                     <div dangerouslySetInnerHTML={{ __html: question.question }} />
-                                    <div className="mt-2"><strong>Your Answer:</strong> {String(answer?.answer || "No answer")}</div>
+                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                    <div className="mt-2"><strong>Your Answer:</strong> {Array.isArray(answer?.answer) ? (question.blanks || []).map((b: any, i: number) => `${b.label}: ${answer.answer[i] || "(empty)"}`).join(" | ") : (answer?.answer || "(not answered)")}</div>
                                     {!isCorrect && (
                                         <div className="mt-2 text-muted">
                                             <strong>Correct Answer: </strong>
@@ -351,7 +358,7 @@ export default function PreviewQuiz() {
                                             {question.type === "MULTIPLE_CHOICE" && question.choices.find((c: any) => c.isCorrect)?.text}
                                             {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
                                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                            {question.type === "FILL_IN_BLANK" && question.choices.filter((c: any) => c.isCorrect).map((c: any) => c.text).join(", ")}
+                                            {question.type === "FILL_IN_BLANK" && (question.blanks || []).map((b: any) => `${b.label}: ${b.correctAnswers[0]}`).join(" | ")}
                                         </div>
                                     )}
                                 </div>
@@ -392,12 +399,15 @@ export default function PreviewQuiz() {
                         } else if (question.type === "TRUE_FALSE") {
                             isCorrect = answer.answer === question.correctAnswer;
                         } else if (question.type === "FILL_IN_BLANK") {
-                            const answerLower = String(answer.answer).toLowerCase().trim();
+                            const userAnswers = Array.isArray(answer?.answer) ? answer.answer : [answer?.answer];
                             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            isCorrect = question.choices.some(
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                (c: any) => c.isCorrect && c.text.toLowerCase().trim() === answerLower
-                            );
+                            isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
+                                const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
+                                return blank.correctAnswers.some(
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                                    (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
+                                );
+                            });
                         }
 
                         return (
@@ -499,14 +509,23 @@ export default function PreviewQuiz() {
 
                         {currentQuestion.type === "FILL_IN_BLANK" && (
                             <div>
-                                <label className="form-label">Your Answer</label>
-                                <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    value={typeof currentAnswer?.answer === 'string' ? currentAnswer.answer : String(currentAnswer?.answer || "")} 
-                                    onChange={(e) => handleAnswerChange(e.target.value)}
-                                    placeholder="Type your answer here"
-                                />
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {(currentQuestion.blanks || []).map((blank: any, idx: number) => (
+                                    <div key={idx} className="mb-3">
+                                        <label className="form-label">{blank.label}</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-control" 
+                                            value={(currentAnswer?.answer && typeof currentAnswer.answer === 'object' ? currentAnswer.answer[idx] : "") || ""} 
+                                            onChange={(e) => {
+                                                const newAnswers = [...(currentAnswer?.answer || [])];
+                                                newAnswers[idx] = e.target.value;
+                                                handleAnswerChange(newAnswers);
+                                            }}
+                                            placeholder={`Type answer for ${blank.label}`}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         )}
 
