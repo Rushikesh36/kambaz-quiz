@@ -487,7 +487,7 @@ function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoic
                     <label className="form-label">Choices</label>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
-                        <div key={`choice-${idx}-${choice.text}`} className="d-flex gap-2 mb-2">
+                        <div key={idx} className="d-flex gap-2 mb-2">
                             <input type="radio" checked={choice.isCorrect} onChange={() => setCorrectChoice(idx)} />
                             <input type="text" className="form-control" value={choice.text} onChange={(e) => updateChoice(idx, "text", e.target.value)} />
                             {(form.choices || []).length > 2 && (
@@ -534,7 +534,7 @@ function QuestionForm({ form, setForm, set, addChoice, removeChoice, updateChoic
                     </small>
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {(form.choices || []).map((choice: any, idx: number) => (
-                        <div key={`fib-${idx}-${choice.text}`} className="d-flex gap-2 mb-2">
+                        <div key={idx} className="d-flex gap-2 mb-2">
                             <input 
                                 type="text" 
                                 className="form-control" 
