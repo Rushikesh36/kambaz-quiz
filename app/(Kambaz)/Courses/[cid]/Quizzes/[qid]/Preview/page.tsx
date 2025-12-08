@@ -253,6 +253,10 @@ export default function PreviewQuiz() {
                 });
                 setScore(calculatedScore);
             } else {
+                if (!attempt || !attempt._id) {
+                    alert("No active quiz attempt found. Please reload the page and try again.");
+                    return;
+                }
                 const result = await client.submitAttempt(attempt._id, answers);
                 setAttempt(result);
                 setScore(result.score);
