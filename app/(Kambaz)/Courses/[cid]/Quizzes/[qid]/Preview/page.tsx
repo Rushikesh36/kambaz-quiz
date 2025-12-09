@@ -428,7 +428,7 @@ export default function PreviewQuiz() {
                                         {question.type === "MULTIPLE_CHOICE" && question.choices.find((c: any) => c.isCorrect)?.text}
                                         {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
                                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                        {question.type === "FILL_IN_BLANK" && question.choices.filter((c: any) => c.isCorrect).map((c: any) => c.text).join(", ")}
+                                        {question.type === "FILL_IN_BLANK" && (question.blanks || []).map((b: any) => `${b.label}: ${b.correctAnswers[0]}`).join(" | ")}
                                     </div>
                                 )}
                             </div>
