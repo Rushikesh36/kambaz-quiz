@@ -15,7 +15,7 @@ function shuffleArray<T>(array: T[]): T[] {
     return shuffled;
 }
 
-export default function PreviewQuiz() {
+export default function TakeQuiz() {
     const params = useParams() as { cid?: string; qid?: string };
     const cid = params.cid ? decodeURIComponent(String(params.cid)) : "";
     const qid = params.qid ? decodeURIComponent(String(params.qid)) : "";
@@ -31,13 +31,8 @@ export default function PreviewQuiz() {
     const [answers, setAnswers] = useState<any[]>([]);
     const [showResults, setShowResults] = useState(false);
     const [score, setScore] = useState(0);
-    const [startTime, setStartTime] = useState<Date | null>(null);
-    const [timeLeft, setTimeLeft] = useState<number>(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [attempt, setAttempt] = useState<any>(null);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [userAttempts, setUserAttempts] = useState<any[]>([]);
-    const [canTakeQuiz, setCanTakeQuiz] = useState(true);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = useSelector((s: any) => s);
@@ -45,24 +40,20 @@ export default function PreviewQuiz() {
     const isFaculty = currentUser?.role?.toLowerCase() === "faculty";
 
     useEffect(() => {
-        // Detect page reload and redirect to quizzes list
+        // Detect page reload and redirect to quizzes list (students only)
         const sessionKey = `quiz_active_${qid}`;
         
         if (!isFaculty && !showResults) {
-            // Check if this page was already loaded in this session
             const wasLoaded = sessionStorage.getItem(sessionKey);
             
             if (wasLoaded) {
-                // This is a reload - redirect to quizzes list
                 sessionStorage.removeItem(sessionKey);
                 router.push(`/Courses/${cid}/Quizzes`);
                 return;
             }
             
-            // Mark this page as loaded
             sessionStorage.setItem(sessionKey, 'true');
             
-            // Clean up when component unmounts (natural navigation away)
             return () => {
                 sessionStorage.removeItem(sessionKey);
             };
@@ -70,31 +61,11 @@ export default function PreviewQuiz() {
     }, [cid, qid, isFaculty, showResults, router]);
 
     useEffect(() => {
-        loadQuizAndCheckAttempts();
+        loadQuiz();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [qid]);
 
-    useEffect(() => {
-        if (!quiz || !startTime || isFaculty) return;
-        const timer = setInterval(() => {
-            const elapsed = Math.floor((Date.now() - startTime.getTime()) / 1000);
-            const remaining = quiz.timeLimit * 60 - elapsed;
-            if (remaining <= 0) {
-                clearInterval(timer);
-                // Time expired - show alert and auto-submit after 2 seconds
-                alert("Time's up! Your quiz will be submitted automatically.");
-                setTimeout(() => {
-                    handleSubmit(true);
-                }, 2000);
-            } else {
-                setTimeLeft(remaining);
-            }
-        }, 1000);
-        return () => clearInterval(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quiz, startTime]);
-
-    const loadQuizAndCheckAttempts = async () => {
+    const loadQuiz = async () => {
         if (!qid) return;
         
         try {
@@ -121,11 +92,6 @@ export default function PreviewQuiz() {
 
             let questionsData = await client.findQuestionsForQuiz(String(qid));
             
-            // Shuffle questions if enabled (for students only)
-            if (!isFaculty && quizData.shuffleQuestions) {
-                questionsData = shuffleArray(questionsData);
-            }
-            
             // Shuffle answers for each question if enabled (for students only)
             if (!isFaculty && quizData.shuffleAnswers) {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,59 +105,32 @@ export default function PreviewQuiz() {
             
             setQuestions(questionsData);
             
-            // Pre-fill answers for faculty preview
+            // Initialize empty answers
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const initialAnswers = questionsData.map((q: any) => {
-                if (isFaculty) {
-                    // Pre-fill correct answers for faculty
-                    if (q.type === "MULTIPLE_CHOICE") {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const correctChoice = q.choices?.find((c: any) => c.isCorrect);
-                        return { question: q._id, answer: correctChoice?.text || "" };
-                    } else if (q.type === "TRUE_FALSE") {
-                        return { question: q._id, answer: q.correctAnswer };
-                    } else if (q.type === "FILL_IN_BLANK") {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        const answers = (q.blanks || []).map((blank: any) => blank.correctAnswers[0] || "");
-                        return { question: q._id, answer: answers };
-                    }
-                }
-                return { question: q._id, answer: "" };
-            });
+            const initialAnswers = questionsData.map((q: any) => ({
+                question: q._id,
+                answer: ""
+            }));
             setAnswers(initialAnswers);
 
+            // Start a new attempt for students only
             if (!isFaculty && currentUser?._id) {
-                const attempts = await client.getAttemptsForUser(String(qid), currentUser._id);
-                setUserAttempts(attempts);
-
-                const attemptCount = attempts.length;
-                const maxAttempts = quizData.multipleAttempts ? quizData.howManyAttempts : 1;
-
-                if (attemptCount >= maxAttempts) {
-                    setCanTakeQuiz(false);
-                    if (attempts.length > 0) {
-                        const lastAttempt = attempts[attempts.length - 1];
-                        showAttemptResults(lastAttempt);
-                    }
+                try {
+                    const newAttempt = await client.startAttempt(String(qid), currentUser._id);
+                    setAttempt(newAttempt);
+                } catch (error) {
+                    console.error("Failed to start attempt:", error);
+                    alert("Failed to start quiz attempt. You may have exceeded the maximum attempts.");
+                    router.push(`/Courses/${cid}/Quizzes/${qid}`);
                     return;
                 }
-
-                const newAttempt = await client.startAttempt(String(qid), currentUser._id);
-                setAttempt(newAttempt);
             }
             
-            setStartTime(new Date());
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             alert(`Error loading quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+            router.push(`/Courses/${cid}/Quizzes`);
         }
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const showAttemptResults = (attemptData: any) => {
-        setAnswers(attemptData.answers || []);
-        setScore(attemptData.score || 0);
-        setShowResults(true);
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -203,6 +142,7 @@ export default function PreviewQuiz() {
         };
         setAnswers(newAnswers);
 
+        // Auto-save for students
         if (attempt && !isFaculty) {
             client.saveAnswers(attempt._id, newAnswers);
         }
@@ -220,16 +160,15 @@ export default function PreviewQuiz() {
         }
     };
 
-    const handleSubmit = async (skipConfirmation = false) => {
-        if (!skipConfirmation) {
-            const ok = window.confirm("Submit quiz?");
-            if (!ok) return;
-        }
+    const handleSubmit = async () => {
+        const ok = window.confirm(isFaculty ? "Submit quiz preview?" : "Submit quiz?");
+        if (!ok) return;
 
         try {
-            let calculatedScore = 0;
-
             if (isFaculty) {
+                // Faculty preview - calculate score locally
+                let calculatedScore = 0;
+
                 questions.forEach((question, idx) => {
                     const answer = answers[idx];
                     let isCorrect = false;
@@ -241,200 +180,62 @@ export default function PreviewQuiz() {
                     } else if (question.type === "TRUE_FALSE") {
                         isCorrect = answer.answer === question.correctAnswer;
                     } else if (question.type === "FILL_IN_BLANK") {
-                        const userAnswers = Array.isArray(answer.answer) ? answer.answer : [answer.answer];
+                        const userAnswer = String(answer.answer || "").toLowerCase().trim();
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
-                            const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
-                            return blank.correctAnswers.some(
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
-                            );
-                        });
+                        isCorrect = question.choices.some((choice: any) => 
+                            choice.isCorrect && choice.text.toLowerCase().trim() === userAnswer
+                        );
                     }
 
                     if (isCorrect) calculatedScore += question.points;
                 });
+                
                 setScore(calculatedScore);
             } else {
+                // Student - submit to backend
                 if (!attempt || !attempt._id) {
-                    alert("No active quiz attempt found. Please reload the page and try again.");
+                    alert("No active quiz attempt found. Please try again.");
+                    router.push(`/Courses/${cid}/Quizzes/${qid}`);
                     return;
                 }
+
                 const result = await client.submitAttempt(attempt._id, answers);
-                setAttempt(result);
                 setScore(result.score);
             }
 
             setShowResults(true);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
-            alert(`Error submitting quiz: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+            alert(`Error submitting quiz: ${error.message || 'Unknown error'}`);
         }
-    };
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
     if (!quiz || !questions.length) {
         return <div className="p-3">Loading quiz...</div>;
     }
 
-    if (!canTakeQuiz && !isFaculty) {
-        return (
-            <div className="p-3">
-                <h3>Maximum Attempts Reached</h3>
-                <div className="alert alert-warning">
-                    You have used all {quiz.multipleAttempts ? quiz.howManyAttempts : 1} attempt(s) for this quiz.
-                </div>
-
-                <div className="mt-3">
-                    <h5>Attempt History</h5>
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Attempt</th>
-                                <th>Score</th>
-                                <th>Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {userAttempts.map((att: any, idx: number) => (
-                                <tr key={att._id}>
-                                    <td>Attempt {idx + 1}</td>
-                                    <td>{att.score} / {att.totalPoints}</td>
-                                    <td>{att.submittedAt ? new Date(att.submittedAt).toLocaleString() : "—"}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {showResults && (
-                    <div className="mt-4">
-                        <h5>Last Attempt Results</h5>
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {questions.map((question: any, idx: number) => {
-                            const answer = answers[idx];
-                            let isCorrect = false;
-
-                            if (question.type === "MULTIPLE_CHOICE") {
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                const selected = question.choices.find((c: any) => c.text === answer?.answer);
-                                isCorrect = selected?.isCorrect || false;
-                            } else if (question.type === "TRUE_FALSE") {
-                                isCorrect = answer?.answer === question.correctAnswer;
-                            } else if (question.type === "FILL_IN_BLANK") {
-                                const userAnswers = Array.isArray(answer?.answer) ? answer.answer : [answer?.answer];
-                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
-                                    const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
-                                    return blank.correctAnswers.some(
-                                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                        (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
-                                    );
-                                });
-                            }
-
-                            return (
-                                <div key={question._id} className="border rounded p-3 mb-3">
-                                    <div className="d-flex justify-content-between">
-                                        <h6>
-                                            Question {idx + 1}{" "}
-                                            {isCorrect ? <span className="text-success">✓</span> : <span className="text-danger">✗</span>}
-                                        </h6>
-                                        <span>{question.points} pts</span>
-                                    </div>
-                                    <div dangerouslySetInnerHTML={{ __html: question.question }} />
-                                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                    <div className="mt-2"><strong>Your Answer:</strong> {Array.isArray(answer?.answer) ? (question.blanks || []).map((b: any, i: number) => `${b.label}: ${answer.answer[i] || "(empty)"}`).join(" | ") : (answer?.answer || "(not answered)")}</div>
-                                    {!isCorrect && (
-                                        <div className="mt-2 text-muted">
-                                            <strong>Correct Answer: </strong>
-                                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                            {question.type === "MULTIPLE_CHOICE" && question.choices.find((c: any) => c.isCorrect)?.text}
-                                            {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
-                                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                            {question.type === "FILL_IN_BLANK" && (question.blanks || []).map((b: any) => `${b.label}: ${b.correctAnswers[0]}`).join(" | ")}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-
-                <button className="btn btn-primary" onClick={() => router.push(`/Courses/${cid}/Quizzes`)}>
-                    Back to Quizzes
-                </button>
-            </div>
-        );
-    }
-
     if (showResults) {
         return (
             <div className="p-3">
-                <h3>{isFaculty ? "Preview Results" : "Quiz Results"}</h3>
-                <div className="alert alert-info mt-3">
-                    <h5>Score: {score} out of {quiz.points}</h5>
-                    {isFaculty && <p>This is a preview. Results are not saved.</p>}
-                    {!isFaculty && userAttempts.length > 0 && (
-                        <p>Attempt {userAttempts.length + 1} of {quiz.multipleAttempts ? quiz.howManyAttempts : 1}</p>
-                    )}
+                <h3>{isFaculty ? "Preview Results" : "Quiz Submitted"}</h3>
+                <div className="alert alert-success mt-3">
+                    <h5>Your Score: {score} out of {quiz.points}</h5>
+                    <p className="mb-0">
+                        Percentage: {Math.round((score / quiz.points) * 100)}%
+                    </p>
                 </div>
 
-                <div className="mt-4">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {questions.map((question: any, idx: number) => {
-                        const answer = answers[idx];
-                        let isCorrect = false;
+                {isFaculty && (
+                    <div className="alert alert-info">
+                        <strong>Preview Mode:</strong> This is a preview only. Results are not saved.
+                    </div>
+                )}
 
-                        if (question.type === "MULTIPLE_CHOICE") {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            const selected = question.choices.find((c: any) => c.text === answer.answer);
-                            isCorrect = selected?.isCorrect || false;
-                        } else if (question.type === "TRUE_FALSE") {
-                            isCorrect = answer.answer === question.correctAnswer;
-                        } else if (question.type === "FILL_IN_BLANK") {
-                            const userAnswers = Array.isArray(answer?.answer) ? answer.answer : [answer?.answer];
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            isCorrect = (question.blanks || []).every((blank: any, idx: number) => {
-                                const userAnswer = String(userAnswers[idx] || "").toLowerCase().trim();
-                                return blank.correctAnswers.some(
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    (correctAns: string) => correctAns.toLowerCase().trim() === userAnswer
-                                );
-                            });
-                        }
-
-                        return (
-                            <div key={question._id} className="border rounded p-3 mb-3">
-                                <div className="d-flex justify-content-between">
-                                    <h6>
-                                        Question {idx + 1}{" "}
-                                        {isCorrect ? <span className="text-success">✓</span> : <span className="text-danger">✗</span>}
-                                    </h6>
-                                    <span>{question.points} pts</span>
-                                </div>
-                                <div dangerouslySetInnerHTML={{ __html: question.question }} />
-                                <div className="mt-2"><strong>Your Answer:</strong> {String(answer?.answer)}</div>
-                                {!isCorrect && (
-                                    <div className="mt-2 text-muted">
-                                        <strong>Correct Answer: </strong>
-                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                        {question.type === "MULTIPLE_CHOICE" && question.choices.find((c: any) => c.isCorrect)?.text}
-                                        {question.type === "TRUE_FALSE" && String(question.correctAnswer)}
-                                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                        {question.type === "FILL_IN_BLANK" && (question.blanks || []).map((b: any) => `${b.label}: ${b.correctAnswers[0]}`).join(" | ")}
-                                    </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                {!isFaculty && (
+                    <div className="alert alert-success">
+                        Your quiz has been submitted successfully! You can view your attempt history on the quiz details page.
+                    </div>
+                )}
 
                 <div className="d-flex gap-2">
                     {isFaculty && (
@@ -442,8 +243,8 @@ export default function PreviewQuiz() {
                             Edit Quiz
                         </button>
                     )}
-                    <button className="btn btn-secondary" onClick={() => router.push(`/Courses/${cid}/Quizzes`)}>
-                        Back to Quizzes
+                    <button className="btn btn-secondary" onClick={() => router.push(`/Courses/${cid}/Quizzes/${qid}`)}>
+                        {isFaculty ? "Back to Quiz" : "View Details"}
                     </button>
                 </div>
             </div>
@@ -461,19 +262,7 @@ export default function PreviewQuiz() {
                 </div>
             )}
 
-            {!isFaculty && userAttempts.length > 0 && (
-                <div className="alert alert-info">
-                    Attempt {userAttempts.length + 1} of {quiz.multipleAttempts ? quiz.howManyAttempts : 1}
-                </div>
-            )}
-
             <h4>{quiz.title}</h4>
-            {startTime && !isFaculty && (
-                <div className="mb-3">
-                    <strong>Time Remaining:</strong>{" "}
-                    <span className={timeLeft < 300 ? "text-danger" : ""}>{formatTime(timeLeft)}</span>
-                </div>
-            )}
 
             <div className="row mt-3">
                 <div className="col-md-9">
@@ -487,7 +276,12 @@ export default function PreviewQuiz() {
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                                 {currentQuestion.choices?.map((choice: any, idx: number) => (
                                     <div key={idx} className="form-check mb-2">
-                                        <input type="radio" className="form-check-input" checked={currentAnswer?.answer === choice.text} onChange={() => handleAnswerChange(choice.text)} />
+                                        <input 
+                                            type="radio" 
+                                            className="form-check-input" 
+                                            checked={currentAnswer?.answer === choice.text} 
+                                            onChange={() => handleAnswerChange(choice.text)} 
+                                        />
                                         <label className="form-check-label">{choice.text}</label>
                                     </div>
                                 ))}
@@ -497,11 +291,21 @@ export default function PreviewQuiz() {
                         {currentQuestion.type === "TRUE_FALSE" && (
                             <div>
                                 <div className="form-check mb-2">
-                                    <input type="radio" className="form-check-input" checked={currentAnswer?.answer === true} onChange={() => handleAnswerChange(true)} />
+                                    <input 
+                                        type="radio" 
+                                        className="form-check-input" 
+                                        checked={currentAnswer?.answer === true} 
+                                        onChange={() => handleAnswerChange(true)} 
+                                    />
                                     <label className="form-check-label">True</label>
                                 </div>
                                 <div className="form-check mb-2">
-                                    <input type="radio" className="form-check-input" checked={currentAnswer?.answer === false} onChange={() => handleAnswerChange(false)} />
+                                    <input 
+                                        type="radio" 
+                                        className="form-check-input" 
+                                        checked={currentAnswer?.answer === false} 
+                                        onChange={() => handleAnswerChange(false)} 
+                                    />
                                     <label className="form-check-label">False</label>
                                 </div>
                             </div>
@@ -509,36 +313,32 @@ export default function PreviewQuiz() {
 
                         {currentQuestion.type === "FILL_IN_BLANK" && (
                             <div>
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {(currentQuestion.blanks || []).map((blank: any, idx: number) => (
-                                    <div key={idx} className="mb-3">
-                                        <label className="form-label">{blank.label}</label>
-                                        <input 
-                                            type="text" 
-                                            className="form-control" 
-                                            value={(currentAnswer?.answer && typeof currentAnswer.answer === 'object' ? currentAnswer.answer[idx] : "") || ""} 
-                                            onChange={(e) => {
-                                                const newAnswers = [...(currentAnswer?.answer || [])];
-                                                newAnswers[idx] = e.target.value;
-                                                handleAnswerChange(newAnswers);
-                                            }}
-                                            placeholder={`Type answer for ${blank.label}`}
-                                        />
-                                    </div>
-                                ))}
+                                <input 
+                                    type="text" 
+                                    className="form-control" 
+                                    value={currentAnswer?.answer || ""} 
+                                    onChange={(e) => handleAnswerChange(e.target.value)}
+                                    placeholder="Type your answer here"
+                                />
                             </div>
                         )}
 
                         <div className="d-flex justify-content-between mt-4">
-                            <button className="btn btn-light border" onClick={handlePrevious} disabled={currentQuestionIndex === 0}>
+                            <button 
+                                className="btn btn-light border" 
+                                onClick={handlePrevious} 
+                                disabled={currentQuestionIndex === 0}
+                            >
                                 Previous
                             </button>
                             {currentQuestionIndex === questions.length - 1 ? (
-                                <button className="btn btn-success" onClick={() => handleSubmit(false)}>
-                                    Submit {isFaculty ? "Preview" : "Quiz"}
+                                <button className="btn btn-success" onClick={handleSubmit}>
+                                    Submit Quiz
                                 </button>
                             ) : (
-                                <button className="btn btn-primary" onClick={handleNext}>Next</button>
+                                <button className="btn btn-primary" onClick={handleNext}>
+                                    Next
+                                </button>
                             )}
                         </div>
                     </div>
@@ -546,7 +346,7 @@ export default function PreviewQuiz() {
                     {!isFaculty && (
                         <div className="text-center mt-3">
                             <small className="text-muted">
-                                Quiz saved at {new Date().toLocaleTimeString()}
+                                Your answers are being saved automatically
                             </small>
                         </div>
                     )}
