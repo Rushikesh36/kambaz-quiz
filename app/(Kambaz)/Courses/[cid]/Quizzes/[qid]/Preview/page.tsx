@@ -313,13 +313,42 @@ export default function TakeQuiz() {
 
                         {currentQuestion.type === "FILL_IN_BLANK" && (
                             <div>
-                                <input 
-                                    type="text" 
-                                    className="form-control" 
-                                    value={currentAnswer?.answer || ""} 
-                                    onChange={(e) => handleAnswerChange(e.target.value)}
-                                    placeholder="Type your answer here"
-                                />
+                                {/* Show input for each blank */}
+                                {currentQuestion.blanks && currentQuestion.blanks.length > 0 ? (
+                                    currentQuestion.blanks.map((blank: any, idx: number) => (
+                                        <div key={idx} className="mb-3">
+                                            <label className="form-label">
+                                                {blank.label}
+                                            </label>
+                                            <input 
+                                                type="text" 
+                                                className="form-control" 
+                                                value={
+                                                    Array.isArray(currentAnswer?.answer) 
+                                                        ? currentAnswer.answer[idx] || ""
+                                                        : idx === 0 ? currentAnswer?.answer || "" : ""
+                                                } 
+                                                onChange={(e) => {
+                                                    const newAnswers = Array.isArray(currentAnswer?.answer) 
+                                                        ? [...currentAnswer.answer]
+                                                        : new Array(currentQuestion.blanks.length).fill("");
+                                                    newAnswers[idx] = e.target.value;
+                                                    handleAnswerChange(newAnswers);
+                                                }}
+                                                placeholder={`Type answer for ${blank.label}`}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    // Fallback: single input if no blanks array (shouldn't happen)
+                                    <input 
+                                        type="text" 
+                                        className="form-control" 
+                                        value={currentAnswer?.answer || ""} 
+                                        onChange={(e) => handleAnswerChange(e.target.value)}
+                                        placeholder="Type your answer here"
+                                    />
+                                )}
                             </div>
                         )}
 
