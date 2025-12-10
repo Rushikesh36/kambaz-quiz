@@ -85,6 +85,12 @@ export default function Quizzes() {
         const now = new Date();
         const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
         const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
+        const dueDate = quiz.dueDate ? new Date(quiz.dueDate) : null;
+
+        // Check if past due date first
+        if (dueDate && now > dueDate) {
+            return "Closed";
+        }
 
         if (!availableDate) return "Available";
         if (now < availableDate) {
@@ -115,6 +121,12 @@ export default function Quizzes() {
             const now = new Date();
             const availableDate = quiz.availableDate ? new Date(quiz.availableDate) : null;
             const untilDate = quiz.untilDate ? new Date(quiz.untilDate) : null;
+            const dueDate = quiz.dueDate ? new Date(quiz.dueDate) : null;
+
+            // Check if past due date first
+            if (dueDate && now > dueDate) {
+                return "Closed";
+            }
 
             if (!availableDate) return "Available";
             if (now < availableDate) return "Not available";

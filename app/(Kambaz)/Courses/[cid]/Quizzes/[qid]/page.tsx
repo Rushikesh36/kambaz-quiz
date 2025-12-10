@@ -89,6 +89,26 @@ export default function QuizDetails() {
     };
 
     const handleTakeQuiz = () => {
+        // Check if quiz is available yet
+        if (quiz.availableDate) {
+            const now = new Date();
+            const availableDate = new Date(quiz.availableDate);
+            if (now < availableDate) {
+                alert("This quiz is not yet available");
+                return;
+            }
+        }
+
+        // Check if quiz is past until date
+        if (quiz.untilDate) {
+            const now = new Date();
+            const untilDate = new Date(quiz.untilDate);
+            if (now > untilDate) {
+                alert("This quiz is no longer available");
+                return;
+            }
+        }
+
         // Check if quiz is past due date
         if (quiz.dueDate) {
             const now = new Date();
@@ -152,12 +172,18 @@ export default function QuizDetails() {
         return <div className="p-3">Loading...</div>;
     }
 
-    // Check if quiz is past due
-    const isPastDue = quiz.dueDate ? new Date() > new Date(quiz.dueDate) : false;
+    // Check quiz availability status
+    const now = new Date();
+    const isNotYetAvailable = quiz.availableDate ? now < new Date(quiz.availableDate) : false;
+    const isPastUntilDate = quiz.untilDate ? now > new Date(quiz.untilDate) : false;
+    const isPastDue = quiz.dueDate ? now > new Date(quiz.dueDate) : false;
     
     // Calculate remaining attempts
     const maxAttempts = quiz.multipleAttempts ? quiz.howManyAttempts : 1;
     const remainingAttempts = maxAttempts - attempts.length;
+
+    // Determine if quiz can be taken
+    const canTakeQuiz = !isNotYetAvailable && !isPastUntilDate && !isPastDue && remainingAttempts > 0;
 
     return (
         <div className="p-3" style={{ maxWidth: 1000 }}>
@@ -192,7 +218,15 @@ export default function QuizDetails() {
                             </button>
                         </>
                     ) : quiz.published ? (
-                        isPastDue ? (
+                        isNotYetAvailable ? (
+                            <div className="alert alert-warning mb-0">
+                                Not available until {new Date(quiz.availableDate).toLocaleString()}
+                            </div>
+                        ) : isPastUntilDate ? (
+                            <div className="alert alert-danger mb-0">
+                                This quiz is no longer available
+                            </div>
+                        ) : isPastDue ? (
                             <div className="alert alert-danger mb-0">
                                 This quiz is past its due date
                             </div>
@@ -200,11 +234,11 @@ export default function QuizDetails() {
                             <div className="alert alert-warning mb-0">
                                 No attempts remaining
                             </div>
-                        ) : (
+                        ) : canTakeQuiz ? (
                             <button className="btn btn-danger" onClick={handleTakeQuiz}>
                                 Take the Quiz
                             </button>
-                        )
+                        ) : null
                     ) : (
                         <div className="alert alert-warning">
                             This quiz is not yet published
@@ -314,7 +348,7 @@ export default function QuizDetails() {
                     ) : attempts.length === 0 ? (
                         <div className="alert alert-info mb-0">
                             You haven't completed this quiz yet.
-                            {remainingAttempts > 0 && (
+                            {canTakeQuiz && remainingAttempts > 0 && (
                                 <div className="mt-2">
                                     <strong>Available Attempts:</strong> {remainingAttempts}
                                 </div>
@@ -326,7 +360,7 @@ export default function QuizDetails() {
                                 <span className="badge bg-primary me-2">
                                     Total Attempts: {attempts.length} / {maxAttempts}
                                 </span>
-                                {remainingAttempts > 0 && (
+                                {remainingAttempts > 0 && canTakeQuiz && (
                                     <span className="badge bg-success">
                                         Remaining: {remainingAttempts}
                                     </span>
